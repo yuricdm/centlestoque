@@ -16,11 +16,9 @@ header {
     background: #1f2937;
     color: white;
     padding: 15px 30px;
-
     display: flex;
     justify-content: space-between;
     align-items: center;
-
     flex-wrap: wrap;
     gap: 15px;
 }
@@ -49,9 +47,7 @@ nav button {
     background: transparent;
     border: none;
     color: white;
-
     padding: 10px 15px;
-
     cursor: pointer;
     border-radius: 5px;
 }
@@ -70,13 +66,12 @@ nav button:hover {
     background: #b91c1c !important;
 }
 
-
 /* CARD DE LOGIN */
 
 .card-login {
     background: white;
     max-width: 420px;
-    margin: 60px auto;
+    margin: 40px auto;
     padding: 35px 30px;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -91,14 +86,23 @@ nav button:hover {
 .card-login p {
     color: #6b7280;
     font-size: 14px;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .campo-login {
     display: flex;
     flex-direction: column;
     text-align: left;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+}
+
+.dica-perfis {
+    margin-top: 20px;
+    padding: 10px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    color: #4b5563;
+    text-align: left;
 }
 
 .btn-block {
@@ -110,7 +114,6 @@ nav button:hover {
     font-size: 0.85em;
 }
 
-
 /* CONTEÚDO */
 
 main {
@@ -119,42 +122,27 @@ main {
     padding: 0 20px;
 }
 
-h1 {
-    margin-bottom: 25px;
-}
-
-h2 {
+h1, h2 {
     margin-bottom: 20px;
 }
-
-
-/* PÁGINAS */
 
 .oculto {
     display: none !important;
 }
 
-
 /* CARDS */
 
 .cards {
     display: grid;
-
-    grid-template-columns:
-        repeat(auto-fit, minmax(220px, 1fr));
-
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
-
     margin-bottom: 30px;
 }
 
 .card {
     background: white;
-
     padding: 25px;
-
     border-radius: 10px;
-
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
@@ -171,42 +159,63 @@ h2 {
     border-left: 5px solid #dc2626;
 }
 
-
 /* PAINEL */
 
 .painel {
     background: white;
-
     padding: 25px;
-
     border-radius: 10px;
-
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-
     margin-bottom: 30px;
-
     overflow-x: auto;
 }
 
+/* BOTÕES DE EXCEL */
+
+.acoes-excel {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.btn-excel {
+    background: #107c41;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.btn-excel:hover {
+    background: #0b5c30;
+}
+
+.importar-box input[type="file"] {
+    display: none;
+}
+
+.btn-importar {
+    background: #1f2937;
+}
+
+.btn-importar:hover {
+    background: #374151;
+}
 
 /* FORMULÁRIO */
 
 .formulario {
     background: white;
-
     padding: 25px;
-
     border-radius: 10px;
-
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-
     margin-bottom: 30px;
-
     display: grid;
-
-    grid-template-columns:
-        repeat(auto-fit, minmax(200px, 1fr));
-
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
 }
 
@@ -220,24 +229,17 @@ label {
     margin-bottom: 7px;
 }
 
-input,
-select {
+input, select {
     padding: 11px;
-
     border: 1px solid #ccc;
-
     border-radius: 5px;
-
     font-size: 15px;
 }
 
-input:focus,
-select:focus {
+input:focus, select:focus {
     outline: none;
-
     border-color: #2563eb;
 }
-
 
 /* BOTÕES */
 
@@ -247,17 +249,11 @@ button {
 
 .btn-principal {
     background: #2563eb;
-
     color: white;
-
     border: none;
-
     padding: 12px 18px;
-
     border-radius: 5px;
-
     cursor: pointer;
-
     align-self: end;
 }
 
@@ -267,74 +263,50 @@ button {
 
 .btn-cancelar {
     background: #6b7280;
-
     color: white;
-
     border: none;
-
     padding: 12px 18px;
-
     border-radius: 5px;
-
     cursor: pointer;
-
     align-self: end;
 }
 
 .btn-excluir {
     background: #dc2626;
-
     color: white;
-
     border: none;
-
     padding: 7px 10px;
-
     border-radius: 4px;
-
     cursor: pointer;
 }
 
 .btn-editar {
     background: #f59e0b;
-
     color: white;
-
     border: none;
-
     padding: 7px 10px;
-
     border-radius: 4px;
-
     cursor: pointer;
-
     margin-right: 5px;
 }
-
 
 /* TABELA */
 
 table {
     width: 100%;
-
     border-collapse: collapse;
-
     min-width: 700px;
 }
 
 th {
     background: #1f2937;
-
     color: white;
-
     padding: 12px;
-
     text-align: left;
 }
 
 td {
     padding: 12px;
-
     border-bottom: 1px solid #ddd;
 }
 
@@ -342,23 +314,15 @@ tr:hover {
     background: #f9fafb;
 }
 
-
-/* STATUS */
-
 .status-ok {
     color: #15803d;
-
     font-weight: bold;
 }
 
 .status-baixo {
     color: #dc2626;
-
     font-weight: bold;
 }
-
-
-/* PESQUISA */
 
 .barra-pesquisa {
     margin-bottom: 20px;
@@ -366,20 +330,13 @@ tr:hover {
 
 .barra-pesquisa input {
     width: 100%;
-
     max-width: 500px;
 }
 
-
-/* INFORMAÇÃO */
-
 .informacao {
     background: #e0f2fe;
-
     border-left: 5px solid #0284c7;
-
     padding: 20px;
-
     border-radius: 5px;
 }
 
@@ -387,26 +344,15 @@ tr:hover {
     margin-top: 8px;
 }
 
-
-/* FOOTER */
-
 footer {
     text-align: center;
-
     background: #1f2937;
-
     color: white;
-
     padding: 20px;
-
     margin-top: 50px;
 }
 
-
-/* RESPONSIVO */
-
 @media (max-width: 700px) {
-
     header {
         flex-direction: column;
         gap: 15px;
@@ -424,5 +370,4 @@ footer {
     .formulario {
         grid-template-columns: 1fr;
     }
-
 }
