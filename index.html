@@ -12,26 +12,29 @@
 <body>
 
     <header>
-        <div class="logo">
-            <span>Enterprise Inventory</span>
-        </div>
+        <div class="header-container">
+            <div class="logo">
+                <span class="logo-icone">📦</span>
+                <span class="logo-texto">Estoque<strong>ML</strong></span>
+            </div>
 
-        <div id="infoUsuarioHeader" class="info-usuario oculto">
-            <span id="nomeUnidadeAtual"></span>
-        </div>
+            <div id="infoUsuarioHeader" class="info-usuario oculto">
+                <span id="nomeUnidadeAtual"></span>
+            </div>
 
-        <nav id="menuNavegacao" class="oculto">
-            <button id="navUnidades" class="btn-trocar-unidade" onclick="voltarParaSelecaoUnidades()">Unidades</button>
-            <button id="navDashboard" onclick="mostrarPagina('dashboard')">Dashboard</button>
-            <button id="navProdutos" onclick="mostrarPagina('produtos')">Produtos</button>
-            <button id="navMovimentacao" onclick="mostrarPagina('movimentacao')">Movimentação</button>
-            <button id="navPendencias" class="btn-destaque-menu" onclick="mostrarPagina('pendencias')">
-                Pendências <span id="badgePendenciasCount" class="badge-count">0</span>
-            </button>
-            <button id="navHistorico" onclick="mostrarPagina('historico')">Histórico</button>
-            <button id="navUsuarios" onclick="mostrarPagina('usuarios')">Gestão de Sistema</button>
-            <button class="btn-sair" onclick="realizarLogout()">Sair</button>
-        </nav>
+            <nav id="menuNavegacao" class="oculto">
+                <button id="navUnidades" class="btn-trocar-unidade" onclick="voltarParaSelecaoUnidades()">Unidades</button>
+                <button id="navDashboard" onclick="mostrarPagina('dashboard')">Dashboard</button>
+                <button id="navProdutos" onclick="mostrarPagina('produtos')">Produtos</button>
+                <button id="navMovimentacao" onclick="mostrarPagina('movimentacao')">Movimentação</button>
+                <button id="navPendencias" class="btn-destaque-menu" onclick="mostrarPagina('pendencias')">
+                    Pendências <span id="badgePendenciasCount" class="badge-count">0</span>
+                </button>
+                <button id="navHistorico" onclick="mostrarPagina('historico')">Histórico</button>
+                <button id="navUsuarios" onclick="mostrarPagina('usuarios')">Gestão</button>
+                <button class="btn-sair" onclick="realizarLogout()">Sair</button>
+            </nav>
+        </div>
     </header>
 
     <main>
@@ -39,8 +42,8 @@
         <!-- 1. TELA DE LOGIN -->
         <section id="login" class="pagina">
             <div class="card-login">
-                <h2>Acesso ao Sistema</h2>
-                <p>Insira suas credenciais de acesso</p>
+                <h2>Acesse a sua conta</h2>
+                <p>Informe suas credenciais para entrar no sistema</p>
 
                 <div class="campo-login">
                     <label for="usuarioInput">Usuário</label>
@@ -57,7 +60,7 @@
                 </div>
 
                 <button class="btn-principal btn-block" onclick="realizarLogin()" style="margin-top: 16px;">
-                    Acessar
+                    Entrar
                 </button>
                 
                 <div class="dica-perfis">
@@ -72,7 +75,7 @@
         <section id="recuperarSenha" class="pagina oculto">
             <div class="card-login">
                 <h2>Recuperar Senha</h2>
-                <p>Informe seu e-mail ou usuário cadastrado para receber as instruções de redefinição.</p>
+                <p>Informe seu e-mail ou usuário cadastrado para receber as instruções.</p>
 
                 <div class="campo-login">
                     <label for="emailRecuperacaoInput">E-mail ou Usuário</label>
@@ -84,7 +87,7 @@
                 </button>
 
                 <div style="margin-top: 16px; text-align: center;">
-                    <a href="#" onclick="mostrarPagina('login')" style="color: var(--text-secondary); text-decoration: none; font-size: 13px;">
+                    <a href="#" onclick="mostrarPagina('login')" class="link-voltar">
                         ← Voltar para o Login
                     </a>
                 </div>
@@ -184,29 +187,28 @@
                     <input type="number" id="estoqueMinimo" min="0" value="1">
                 </div>
 
-                <button class="btn-principal" onclick="salvarProduto()">
-                    Salvar Produto
-                </button>
-
-                <button class="btn-cancelar" onclick="limparFormulario()">
-                    Limpar
-                </button>
+                <div class="acoes-formulario">
+                    <button class="btn-principal" onclick="salvarProduto()">Salvar Produto</button>
+                    <button class="btn-cancelar" onclick="limparFormulario()">Limpar</button>
+                </div>
             </div>
 
             <div class="painel">
-                <div class="acoes-excel">
-                    <button id="btnExportarExcel" class="btn-excel" onclick="exportarProdutosExcel()">
-                        Exportar XLSX
-                    </button>
-                    
-                    <div id="containerImportarExcel" class="importar-box">
-                        <label for="inputExcel" class="btn-excel">Importar XLSX</label>
-                        <input type="file" id="inputExcel" accept=".xlsx, .xls" onchange="importarProdutosExcel(event)">
+                <div class="top-bar-painel">
+                    <div class="barra-pesquisa">
+                        <input type="text" id="pesquisa" placeholder="Buscar por nome, código ou categoria..." onkeyup="listarProdutos()">
                     </div>
-                </div>
 
-                <div class="barra-pesquisa">
-                    <input type="text" id="pesquisa" placeholder="Buscar por nome, código ou categoria..." onkeyup="listarProdutos()">
+                    <div class="acoes-excel">
+                        <button id="btnExportarExcel" class="btn-excel" onclick="exportarProdutosExcel()">
+                            Exportar XLSX
+                        </button>
+                        
+                        <div id="containerImportarExcel" class="importar-box">
+                            <label for="inputExcel" class="btn-excel">Importar XLSX</label>
+                            <input type="file" id="inputExcel" accept=".xlsx, .xls" onchange="importarProdutosExcel(event)">
+                        </div>
+                    </div>
                 </div>
 
                 <table>
@@ -259,13 +261,15 @@
                     <input type="text" id="observacaoMovimentacao" placeholder="Ex: Ordem de Serviço #104">
                 </div>
 
-                <button class="btn-principal" onclick="registrarMovimentacao()">
-                    Enviar Registro / Solicitação
-                </button>
+                <div class="acoes-formulario">
+                    <button class="btn-principal" onclick="registrarMovimentacao()">
+                        Enviar Registro / Solicitação
+                    </button>
+                </div>
             </div>
 
             <div class="informacao">
-                <h3>Política de Retirada de Materiais</h3>
+                <h3> Política de Retirada de Materiais</h3>
                 <p>• <strong>Entradas:</strong> Adicionam quantidade diretamente ao saldo da unidade.</p>
                 <p>• <strong>Saídas (Técnicos):</strong> Geram uma <em>Solicitação Pendente</em>. O saldo só é debitado após autorização do Supervisor ou Coordenador.</p>
             </div>
@@ -273,7 +277,7 @@
         </section>
 
 
-        <!-- 6. PENDÊNCIAS DE APROVAÇÃO (SUPERVISOR / COORDENADOR) -->
+        <!-- 6. PENDÊNCIAS DE APROVAÇÃO -->
         <section id="pendencias" class="pagina oculto">
 
             <h1>Solicitações de Saída Pendentes</h1>
@@ -304,7 +308,7 @@
             <h1>Histórico de Movimentações <span class="badge-unidade"></span></h1>
 
             <div class="painel">
-                <div class="acoes-excel">
+                <div class="acoes-excel" style="margin-bottom: 16px;">
                     <button class="btn-excel" onclick="exportarHistoricoExcel()">
                         Exportar Relatório (XLSX)
                     </button>
@@ -328,7 +332,7 @@
         </section>
 
 
-        <!-- 8. GESTÃO DE SISTEMA (COORDENADOR / ADMIN) -->
+        <!-- 8. GESTÃO DE SISTEMA -->
         <section id="usuarios" class="pagina oculto">
 
             <h1>Gestão do Sistema e Unidades</h1>
@@ -336,7 +340,7 @@
             <!-- FORMULÁRIO DE CRIAR NOVA UNIDADE -->
             <div id="containerFormUnidade" class="formulario">
                 <div style="grid-column: 1 / -1;">
-                    <h3 style="font-size: 14px; margin-bottom: 5px;">➕ Criar Nova Unidade</h3>
+                    <h3>➕ Criar Nova Unidade</h3>
                 </div>
                 <div>
                     <label>Código da Unidade</label>
@@ -346,7 +350,7 @@
                     <label>Nome Completo da Unidade</label>
                     <input type="text" id="novoNomeUnidade" placeholder="Ex: SRS5 PASSO FUNDO - RS">
                 </div>
-                <div style="justify-content: flex-end;">
+                <div class="acoes-formulario">
                     <button class="btn-principal" onclick="cadastrarNovaUnidade()">Cadastrar Unidade</button>
                 </div>
             </div>
@@ -354,7 +358,7 @@
             <!-- FORMULÁRIO DE CRIAR NOVO USUÁRIO -->
             <div class="formulario">
                 <div style="grid-column: 1 / -1;">
-                    <h3 style="font-size: 14px; margin-bottom: 5px;">👤 Cadastrar Novo Usuário / Técnico</h3>
+                    <h3>👤 Cadastrar Novo Usuário / Técnico</h3>
                 </div>
                 <div>
                     <label>Nome Completo</label>
@@ -392,7 +396,7 @@
                     </select>
                 </div>
 
-                <div style="grid-column: 1 / -1;">
+                <div class="acoes-formulario">
                     <button class="btn-principal" onclick="cadastrarNovoUsuario()">
                         Cadastrar Usuário
                     </button>
@@ -421,7 +425,7 @@
     </main>
 
     <footer>
-        Sistema de Controle de Estoque - por Yuri Milla &copy; 2026
+        Sistema de Controle de Estoque — por <strong>Yuri Milla</strong> &copy; 2026
     </footer>
 
     <script src="script.js"></script>
