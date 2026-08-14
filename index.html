@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão de Estoque</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Biblioteca SheetJS para Leitura e Exportação de Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
@@ -238,7 +239,7 @@
             <div class="informacao">
                 <h3>Política de Retirada de Materiais</h3>
                 <p>• <strong>Entradas:</strong> Adicionam quantidade diretamente ao saldo da unidade.</p>
-                <p>• <strong>Saídas (Técnicos):</strong> Geram uma <em>Solicitação Pendente</em>. O saldo só será debitado após a autorização de um Supervisor ou Coordenador.</p>
+                <p>• <strong>Saídas (Técnicos):</strong> Geram uma <em>Solicitação Pendente</em>. O saldo só é debitado após autorização do Supervisor ou Coordenador.</p>
             </div>
 
         </section>
@@ -304,7 +305,7 @@
 
             <h1>Gestão do Sistema e Unidades</h1>
 
-            <!-- FORMULÁRIO DE CRIAR NOVA UNIDADE (SÓ COORDENADOR/ADMIN) -->
+            <!-- FORMULÁRIO DE CRIAR NOVA UNIDADE -->
             <div id="containerFormUnidade" class="formulario">
                 <div style="grid-column: 1 / -1;">
                     <h3 style="font-size: 14px; margin-bottom: 5px;">➕ Criar Nova Unidade</h3>
