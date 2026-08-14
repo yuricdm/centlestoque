@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Estoque Multi-Unidades</title>
+    <title>Sistema de Gestão de Estoque</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Biblioteca SheetJS para Leitura e Exportação de Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
@@ -13,7 +12,7 @@
 
     <header>
         <div class="logo">
-            📦 Controle de Estoque
+            <span>Enterprise Inventory</span>
         </div>
 
         <div id="infoUsuarioHeader" class="info-usuario oculto">
@@ -21,36 +20,39 @@
         </div>
 
         <nav id="menuNavegacao" class="oculto">
-            <button id="navUnidades" class="btn-trocar-unidade" onclick="voltarParaSelecaoUnidades()">🏢 Unidades</button>
+            <button id="navUnidades" class="btn-trocar-unidade" onclick="voltarParaSelecaoUnidades()">Unidades</button>
             <button id="navDashboard" onclick="mostrarPagina('dashboard')">Dashboard</button>
             <button id="navProdutos" onclick="mostrarPagina('produtos')">Produtos</button>
             <button id="navMovimentacao" onclick="mostrarPagina('movimentacao')">Movimentação</button>
+            <button id="navPendencias" class="btn-destaque-menu" onclick="mostrarPagina('pendencias')">
+                Pendências <span id="badgePendenciasCount" class="badge-count">0</span>
+            </button>
             <button id="navHistorico" onclick="mostrarPagina('historico')">Histórico</button>
-            <button id="navUsuarios" class="btn-destaque-menu" onclick="mostrarPagina('usuarios')">👥 Gestão de Usuários</button>
+            <button id="navUsuarios" onclick="mostrarPagina('usuarios')">Gestão de Sistema</button>
             <button class="btn-sair" onclick="realizarLogout()">Sair</button>
         </nav>
     </header>
 
     <main>
 
-        <!-- 1. TELA DE LOGIN (APENAS USUÁRIO E SENHA) -->
+        <!-- 1. TELA DE LOGIN -->
         <section id="login" class="pagina">
             <div class="card-login">
-                <h2>🔑 Acesso ao Sistema</h2>
-                <p>Informe suas credenciais para entrar:</p>
+                <h2>Acesso ao Sistema</h2>
+                <p>Insira suas credenciais de acesso</p>
 
                 <div class="campo-login">
                     <label for="usuarioInput">Usuário</label>
-                    <input type="text" id="usuarioInput" placeholder="Digite seu usuário">
+                    <input type="text" id="usuarioInput" placeholder="Informe seu usuário">
                 </div>
 
                 <div class="campo-login">
                     <label for="senhaInput">Senha</label>
-                    <input type="password" id="senhaInput" placeholder="Digite sua senha">
+                    <input type="password" id="senhaInput" placeholder="••••••••">
                 </div>
 
                 <button class="btn-principal btn-block" onclick="realizarLogin()">
-                    Entrar
+                    Acessar
                 </button>
                 
                 <div class="dica-perfis">
@@ -61,11 +63,11 @@
         </section>
 
 
-        <!-- 2. TELA DE SELEÇÃO DE UNIDADES (APÓS LOGIN) -->
+        <!-- 2. TELA DE SELEÇÃO DE UNIDADES -->
         <section id="selecaoUnidade" class="pagina oculto">
             <div class="container-unidades">
-                <h2>🏢 Selecione a Unidade de Trabalho</h2>
-                <p>Escolha a unidade que deseja visualizar/gerenciar:</p>
+                <h2>Unidades Operacionais</h2>
+                <p>Selecione a unidade de trabalho para prosseguir</p>
 
                 <div id="gridUnidades" class="grid-unidades">
                     <!-- Gerado dinamicamente via JS -->
@@ -77,21 +79,21 @@
         <!-- 3. DASHBOARD -->
         <section id="dashboard" class="pagina oculto">
 
-            <h1>Dashboard - <span class="badge-unidade"></span></h1>
+            <h1>Dashboard <span class="badge-unidade"></span></h1>
 
             <div class="cards">
                 <div class="card">
-                    <h3>Produtos cadastrados</h3>
+                    <h3>Produtos Cadastrados</h3>
                     <strong id="totalProdutos">0</strong>
                 </div>
 
                 <div class="card">
-                    <h3>Total em estoque</h3>
+                    <h3>Total em Estoque</h3>
                     <strong id="totalEstoque">0</strong>
                 </div>
 
                 <div class="card alerta-card">
-                    <h3>Estoque baixo</h3>
+                    <h3>Estoque Crítico</h3>
                     <strong id="totalBaixo">0</strong>
                 </div>
 
@@ -102,7 +104,7 @@
             </div>
 
             <div class="painel">
-                <h2>⚠️ Produtos com estoque baixo</h2>
+                <h2>Itens com Estoque Baixo</h2>
                 <table>
                     <thead>
                         <tr>
@@ -123,13 +125,13 @@
         <!-- 4. PRODUTOS -->
         <section id="produtos" class="pagina oculto">
 
-            <h1>Cadastro de Produtos - <span class="badge-unidade"></span></h1>
+            <h1>Cadastro de Produtos <span class="badge-unidade"></span></h1>
 
             <div id="containerFormProdutos" class="formulario">
                 <input type="hidden" id="produtoId">
 
                 <div>
-                    <label>Nome do produto</label>
+                    <label>Nome do Produto</label>
                     <input type="text" id="nomeProduto" placeholder="Ex: Motor WEG">
                 </div>
 
@@ -144,12 +146,12 @@
                 </div>
 
                 <div>
-                    <label>Estoque inicial</label>
+                    <label>Estoque Inicial</label>
                     <input type="number" id="estoqueInicial" min="0" value="0">
                 </div>
 
                 <div>
-                    <label>Estoque mínimo</label>
+                    <label>Estoque Mínimo</label>
                     <input type="number" id="estoqueMinimo" min="0" value="1">
                 </div>
 
@@ -165,17 +167,17 @@
             <div class="painel">
                 <div class="acoes-excel">
                     <button id="btnExportarExcel" class="btn-excel" onclick="exportarProdutosExcel()">
-                        📥 Baixar Produtos (Excel)
+                        Exportar XLSX
                     </button>
                     
                     <div id="containerImportarExcel" class="importar-box">
-                        <label for="inputExcel" class="btn-excel btn-importar">📤 Subir Planilha (Excel)</label>
+                        <label for="inputExcel" class="btn-excel">Importar XLSX</label>
                         <input type="file" id="inputExcel" accept=".xlsx, .xls" onchange="importarProdutosExcel(event)">
                     </div>
                 </div>
 
                 <div class="barra-pesquisa">
-                    <input type="text" id="pesquisa" placeholder="🔎 Pesquisar produto nesta unidade..." onkeyup="listarProdutos()">
+                    <input type="text" id="pesquisa" placeholder="Buscar por nome, código ou categoria..." onkeyup="listarProdutos()">
                 </div>
 
                 <table>
@@ -200,7 +202,7 @@
         <!-- 5. MOVIMENTAÇÃO -->
         <section id="movimentacao" class="pagina oculto">
 
-            <h1>Entrada / Saída de Estoque - <span class="badge-unidade"></span></h1>
+            <h1>Movimentação / Solicitação <span class="badge-unidade"></span></h1>
 
             <div class="formulario">
                 <div>
@@ -211,10 +213,10 @@
                 </div>
 
                 <div>
-                    <label>Tipo</label>
+                    <label>Tipo de Operação</label>
                     <select id="tipoMovimentacao">
-                        <option value="entrada">Entrada</option>
-                        <option value="saida">Saída</option>
+                        <option value="entrada">Entrada (Direta)</option>
+                        <option value="saida">Saída / Retirada</option>
                     </select>
                 </div>
 
@@ -224,46 +226,70 @@
                 </div>
 
                 <div>
-                    <label>Observação</label>
-                    <input type="text" id="observacaoMovimentacao" placeholder="Ex: Compra / Uso na manutenção">
+                    <label>Observação / Justificativa</label>
+                    <input type="text" id="observacaoMovimentacao" placeholder="Ex: Ordem de Serviço #104">
                 </div>
 
                 <button class="btn-principal" onclick="registrarMovimentacao()">
-                    Registrar movimentação
+                    Enviar Registro / Solicitação
                 </button>
             </div>
 
             <div class="informacao">
-                <h3>Como funciona?</h3>
-                <p><strong>Entrada:</strong> adiciona quantidade ao estoque da unidade atual.</p>
-                <p><strong>Saída:</strong> remove quantidade do estoque da unidade atual.</p>
-                <p>O sistema impede uma saída maior que o estoque disponível.</p>
+                <h3>Política de Retirada de Materiais</h3>
+                <p>• <strong>Entradas:</strong> Adicionam quantidade diretamente ao saldo da unidade.</p>
+                <p>• <strong>Saídas (Técnicos):</strong> Geram uma <em>Solicitação Pendente</em>. O saldo só será debitado após a autorização de um Supervisor ou Coordenador.</p>
             </div>
 
         </section>
 
 
-        <!-- 6. HISTÓRICO -->
+        <!-- 6. PENDÊNCIAS DE APROVAÇÃO (SUPERVISOR / COORDENADOR) -->
+        <section id="pendencias" class="pagina oculto">
+
+            <h1>Solicitações de Saída Pendentes</h1>
+
+            <div class="painel">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Unidade</th>
+                            <th>Solicitante</th>
+                            <th>Produto</th>
+                            <th>Qtd</th>
+                            <th>Justificativa</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaPendencias"></tbody>
+                </table>
+            </div>
+
+        </section>
+
+
+        <!-- 7. HISTÓRICO -->
         <section id="historico" class="pagina oculto">
 
-            <h1>Histórico de Movimentações - <span class="badge-unidade"></span></h1>
+            <h1>Histórico de Movimentações <span class="badge-unidade"></span></h1>
 
             <div class="painel">
                 <div class="acoes-excel">
                     <button class="btn-excel" onclick="exportarHistoricoExcel()">
-                        📥 Baixar Histórico (Excel)
+                        Exportar Relatório (XLSX)
                     </button>
                 </div>
 
                 <table>
                     <thead>
                         <tr>
-                            <th>Data</th>
+                            <th>Data/Hora</th>
                             <th>Produto</th>
-                            <th>Tipo</th>
-                            <th>Quantidade</th>
+                            <th>Operação</th>
+                            <th>Qtd</th>
                             <th>Observação</th>
-                            <th>Usuário</th>
+                            <th>Responsável</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaHistorico"></tbody>
@@ -273,29 +299,51 @@
         </section>
 
 
-        <!-- 7. GESTÃO DE USUÁRIOS (EXCLUSIVO PARA COORDENADOR / ADMIN) -->
+        <!-- 8. GESTÃO DE SISTEMA (COORDENADOR / ADMIN) -->
         <section id="usuarios" class="pagina oculto">
 
-            <h1>Gestão de Usuários e Técnicos</h1>
+            <h1>Gestão do Sistema e Unidades</h1>
 
-            <div class="formulario">
+            <!-- FORMULÁRIO DE CRIAR NOVA UNIDADE (SÓ COORDENADOR/ADMIN) -->
+            <div id="containerFormUnidade" class="formulario">
+                <div style="grid-column: 1 / -1;">
+                    <h3 style="font-size: 14px; margin-bottom: 5px;">➕ Criar Nova Unidade</h3>
+                </div>
                 <div>
-                    <label>Nome do Usuário</label>
-                    <input type="text" id="novoNomeUsuario" placeholder="Ex: João da Silva">
+                    <label>Código da Unidade</label>
+                    <input type="text" id="novoIdUnidade" placeholder="Ex: SRS5">
+                </div>
+                <div>
+                    <label>Nome Completo da Unidade</label>
+                    <input type="text" id="novoNomeUnidade" placeholder="Ex: SRS5 PASSO FUNDO - RS">
+                </div>
+                <div style="justify-content: flex-end;">
+                    <button class="btn-principal" onclick="cadastrarNovaUnidade()">Cadastrar Unidade</button>
+                </div>
+            </div>
+
+            <!-- FORMULÁRIO DE CRIAR NOVO USUÁRIO -->
+            <div class="formulario">
+                <div style="grid-column: 1 / -1;">
+                    <h3 style="font-size: 14px; margin-bottom: 5px;">👤 Cadastrar Novo Usuário / Técnico</h3>
+                </div>
+                <div>
+                    <label>Nome Completo</label>
+                    <input type="text" id="novoNomeUsuario" placeholder="Ex: Carlos Andrade">
                 </div>
 
                 <div>
-                    <label>Login (Username)</label>
-                    <input type="text" id="novoLoginUsuario" placeholder="Ex: joaosilva">
+                    <label>Login (Usuário)</label>
+                    <input type="text" id="novoLoginUsuario" placeholder="Ex: candrade">
                 </div>
 
                 <div>
                     <label>Senha</label>
-                    <input type="password" id="novaSenhaUsuario" placeholder="Ex: 1234">
+                    <input type="password" id="novaSenhaUsuario" placeholder="••••••••">
                 </div>
 
                 <div>
-                    <label>Perfil / Cargo</label>
+                    <label>Nível de Perfil</label>
                     <select id="novoPerfilUsuario">
                         <option value="tecnico">Técnico</option>
                         <option value="supervisor">Supervisor</option>
@@ -304,30 +352,28 @@
                 </div>
 
                 <div>
-                    <label>Vincular à Unidade</label>
+                    <label>Unidade de Acesso</label>
                     <select id="novaUnidadeUsuario">
-                        <option value="TODAS">TODAS (Acesso Livre)</option>
-                        <option value="SRS1">SRS1 PORTO ALEGRE - RS</option>
-                        <option value="SRS2">SRS2 PELOTAS - RS</option>
-                        <option value="SRS3">SRS3 CAXIAS DO SUL - RS</option>
-                        <option value="SRS4">SRS4 SANTA MARIA - RS</option>
+                        <!-- Preenchido dinamicamente via JS -->
                     </select>
                 </div>
 
-                <button class="btn-principal" onclick="cadastrarNovoUsuario()">
-                    Cadastrar Usuário
-                </button>
+                <div style="grid-column: 1 / -1;">
+                    <button class="btn-principal" onclick="cadastrarNovoUsuario()">
+                        Cadastrar Usuário
+                    </button>
+                </div>
             </div>
 
             <div class="painel">
-                <h2>Users Cadastrados no Sistema</h2>
+                <h2>Usuários Cadastrados</h2>
                 <table>
                     <thead>
                         <tr>
                             <th>Nome</th>
                             <th>Login</th>
                             <th>Perfil</th>
-                            <th>Unidade Vinculada</th>
+                            <th>Unidade</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -340,7 +386,7 @@
     </main>
 
     <footer>
-        Sistema de Controle de Estoque
+        Sistema de Controle de Estoque &copy; 2026
     </footer>
 
     <script src="script.js"></script>
