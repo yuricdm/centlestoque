@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão de Estoque</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Biblioteca SheetJS para Leitura e Exportação de Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
@@ -31,6 +30,7 @@
                     Pendências <span id="badgePendenciasCount" class="badge-count">0</span>
                 </button>
                 <button id="navHistorico" onclick="mostrarPagina('historico')">Histórico</button>
+                <button id="navCargos" onclick="mostrarPagina('cargos')">Cargos & Permissões</button>
                 <button id="navUsuarios" onclick="mostrarPagina('usuarios')">Gestão</button>
                 <button class="btn-sair" onclick="realizarLogout()">Sair</button>
             </nav>
@@ -39,7 +39,7 @@
 
     <main>
 
-        <!-- 1. TELA DE LOGIN -->
+        <!-- 1. LOGIN -->
         <section id="login" class="pagina">
             <div class="card-login">
                 <h2>Acesse a sua conta</h2>
@@ -70,8 +70,7 @@
             </div>
         </section>
 
-
-        <!-- 1.1 TELA DE RECUPERAÇÃO DE SENHA -->
+        <!-- 1.1 RECUPERAR SENHA -->
         <section id="recuperarSenha" class="pagina oculto">
             <div class="card-login">
                 <h2>Recuperar Senha</h2>
@@ -94,23 +93,18 @@
             </div>
         </section>
 
-
-        <!-- 2. TELA DE SELEÇÃO DE UNIDADES -->
+        <!-- 2. UNIDADES -->
         <section id="selecaoUnidade" class="pagina oculto">
             <div class="container-unidades">
                 <h2>Unidades Operacionais</h2>
                 <p>Selecione a unidade de trabalho para prosseguir</p>
 
-                <div id="gridUnidades" class="grid-unidades">
-                    <!-- Gerado dinamicamente via JS -->
-                </div>
+                <div id="gridUnidades" class="grid-unidades"></div>
             </div>
         </section>
 
-
         <!-- 3. DASHBOARD -->
         <section id="dashboard" class="pagina oculto">
-
             <h1>Dashboard <span class="badge-unidade"></span></h1>
 
             <div class="cards">
@@ -150,13 +144,10 @@
                     <tbody id="tabelaBaixo"></tbody>
                 </table>
             </div>
-
         </section>
-
 
         <!-- 4. PRODUTOS -->
         <section id="produtos" class="pagina oculto">
-
             <h1>Cadastro de Produtos <span class="badge-unidade"></span></h1>
 
             <div id="containerFormProdutos" class="formulario">
@@ -226,13 +217,10 @@
                     <tbody id="tabelaProdutos"></tbody>
                 </table>
             </div>
-
         </section>
-
 
         <!-- 5. MOVIMENTAÇÃO -->
         <section id="movimentacao" class="pagina oculto">
-
             <h1>Movimentação / Solicitação <span class="badge-unidade"></span></h1>
 
             <div class="formulario">
@@ -269,17 +257,14 @@
             </div>
 
             <div class="informacao">
-                <h3> Política de Retirada de Materiais</h3>
+                <h3>Política de Retirada de Materiais</h3>
                 <p>• <strong>Entradas:</strong> Adicionam quantidade diretamente ao saldo da unidade.</p>
-                <p>• <strong>Saídas (Técnicos):</strong> Geram uma <em>Solicitação Pendente</em>. O saldo só é debitado após autorização do Supervisor ou Coordenador.</p>
+                <p>• <strong>Saídas (Retiradas):</strong> Perfis sem permissão direta geram <em>Solicitação Pendente</em>, aguardando aprovação.</p>
             </div>
-
         </section>
 
-
-        <!-- 6. PENDÊNCIAS DE APROVAÇÃO -->
+        <!-- 6. PENDÊNCIAS -->
         <section id="pendencias" class="pagina oculto">
-
             <h1>Solicitações de Saída Pendentes</h1>
 
             <div class="painel">
@@ -298,13 +283,10 @@
                     <tbody id="tabelaPendencias"></tbody>
                 </table>
             </div>
-
         </section>
-
 
         <!-- 7. HISTÓRICO -->
         <section id="historico" class="pagina oculto">
-
             <h1>Histórico de Movimentações <span class="badge-unidade"></span></h1>
 
             <div class="painel">
@@ -328,16 +310,60 @@
                     <tbody id="tabelaHistorico"></tbody>
                 </table>
             </div>
-
         </section>
 
+        <!-- 8. CARGOS & PERMISSÕES (NOVO) -->
+        <section id="cargos" class="pagina oculto">
+            <h1>Gestão de Cargos e Permissões</h1>
 
-        <!-- 8. GESTÃO DE SISTEMA -->
+            <div class="formulario">
+                <div style="grid-column: 1 / -1;">
+                    <h3>🔑 Criar Novo Cargo / Perfil de Acesso</h3>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <label>Nome do Cargo</label>
+                    <input type="text" id="novoNomeCargo" placeholder="Ex: Auditor de Estoque">
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <label>Permissões Habilitadas para este Cargo:</label>
+                    <div class="grid-permissoes">
+                        <label><input type="checkbox" class="chk-perm" value="ver_dashboard"> Ver Dashboard</label>
+                        <label><input type="checkbox" class="chk-perm" value="cadastrar_produto"> Cadastrar Produtos</label>
+                        <label><input type="checkbox" class="chk-perm" value="editar_produto"> Editar / Excluir Produtos</label>
+                        <label><input type="checkbox" class="chk-perm" value="movimentar_direto"> Realizar Saída Direta (Sem aprovação)</label>
+                        <label><input type="checkbox" class="chk-perm" value="aprovar_pendencias"> Aprovar Pendências</label>
+                        <label><input type="checkbox" class="chk-perm" value="gerenciar_usuarios"> Gerenciar Usuários e Unidades</label>
+                        <label><input type="checkbox" class="chk-perm" value="exportar_excel"> Exportar Relatórios Excel</label>
+                    </div>
+                </div>
+
+                <div class="acoes-formulario">
+                    <button class="btn-principal" onclick="cadastrarNovoCargo()">Cadastrar Cargo</button>
+                </div>
+            </div>
+
+            <div class="painel">
+                <h2>Cargos Cadastrados no Sistema</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome do Cargo</th>
+                            <th>Permissões Associadas</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaCargos"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 9. GESTÃO DE USUÁRIOS E UNIDADES -->
         <section id="usuarios" class="pagina oculto">
-
             <h1>Gestão do Sistema e Unidades</h1>
 
-            <!-- FORMULÁRIO DE CRIAR NOVA UNIDADE -->
+            <!-- CRIAR UNIDADE -->
             <div id="containerFormUnidade" class="formulario">
                 <div style="grid-column: 1 / -1;">
                     <h3>➕ Criar Nova Unidade</h3>
@@ -355,10 +381,10 @@
                 </div>
             </div>
 
-            <!-- FORMULÁRIO DE CRIAR NOVO USUÁRIO -->
+            <!-- CRIAR USUÁRIO -->
             <div class="formulario">
                 <div style="grid-column: 1 / -1;">
-                    <h3>👤 Cadastrar Novo Usuário / Técnico</h3>
+                    <h3>👤 Cadastrar Novo Usuário</h3>
                 </div>
                 <div>
                     <label>Nome Completo</label>
@@ -381,11 +407,9 @@
                 </div>
 
                 <div>
-                    <label>Nível de Perfil</label>
+                    <label>Cargo / Perfil de Acesso</label>
                     <select id="novoPerfilUsuario">
-                        <option value="tecnico">Técnico</option>
-                        <option value="supervisor">Supervisor</option>
-                        <option value="coordenador">Coordenador</option>
+                        <!-- Preenchido dinamicamente via JS -->
                     </select>
                 </div>
 
@@ -411,7 +435,7 @@
                             <th>Nome</th>
                             <th>E-mail</th>
                             <th>Login</th>
-                            <th>Perfil</th>
+                            <th>Cargo</th>
                             <th>Unidade</th>
                             <th>Ações</th>
                         </tr>
