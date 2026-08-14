@@ -10,10 +10,10 @@ const UNIDADES_PADRAO = [
 ];
 
 const USUARIOS_PADRAO = [
-    { login: "admin", senha: "1234", perfil: "admin", nome: "Admin Master", unidadeId: "TODAS" },
-    { login: "coordenador", senha: "1234", perfil: "coordenador", nome: "Coordenador Geral", unidadeId: "TODAS" },
-    { login: "supervisor", senha: "1234", perfil: "supervisor", nome: "Supervisor Pelotas", unidadeId: "SRS2" },
-    { login: "tecnico", senha: "1234", perfil: "tecnico", nome: "Técnico Silva", unidadeId: "SRS2" }
+    { login: "admin", email: "admin@empresa.com", senha: "1234", perfil: "admin", nome: "Admin Master", unidadeId: "TODAS" },
+    { login: "coordenador", email: "coordenador@empresa.com", senha: "1234", perfil: "coordenador", nome: "Coordenador Geral", unidadeId: "TODAS" },
+    { login: "supervisor", email: "supervisor@empresa.com", senha: "1234", perfil: "supervisor", nome: "Supervisor Pelotas", unidadeId: "SRS2" },
+    { login: "tecnico", email: "tecnico@empresa.com", senha: "1234", perfil: "tecnico", nome: "Técnico Silva", unidadeId: "SRS2" }
 ];
 
 let unidades = JSON.parse(localStorage.getItem("unidades")) || UNIDADES_PADRAO;
@@ -41,7 +41,7 @@ function salvarDados() {
 
 
 // ========================================
-// AUTENTICAÇÃO E SESSÃO
+// AUTENTICAÇÃO E RECUPERAÇÃO DE SENHA
 // ========================================
 
 function realizarLogin() {
@@ -57,6 +57,29 @@ function realizarLogin() {
     } else {
         alert("Usuário ou senha incorretos!\n\nUsuários de teste (senha 1234):\n- admin\n- coordenador\n- supervisor\n- tecnico");
     }
+}
+
+function enviarEmailRecuperacao() {
+    const identificador = document.getElementById("emailRecuperacaoInput").value.trim().toLowerCase();
+
+    if (!identificador) {
+        alert("Por favor, informe seu e-mail ou usuário.");
+        return;
+    }
+
+    const conta = usuarios.find(u => 
+        u.login.toLowerCase() === identificador || 
+        (u.email && u.email.toLowerCase() === identificador)
+    );
+
+    if (conta) {
+        alert(`Instruções de redefinição de senha enviadas com sucesso para a conta de "${conta.nome}"!\n\n(Simulação: Verifique sua caixa de entrada).`);
+    } else {
+        alert("Se o e-mail/usuário estiver cadastrado no sistema, você receberá um link de redefinição em instantes.");
+    }
+
+    document.getElementById("emailRecuperacaoInput").value = "";
+    mostrarPagina("login");
 }
 
 function realizarLogout() {
@@ -130,9 +153,9 @@ function aplicarPermissoesInterface() {
         if (navDashboard) navDashboard.style.display = "none";
         if (navPendencias) navPendencias.style.display = "none";
         if (navUsuarios) navUsuarios.style.display = "none";
-        if (containerFormProdutos) containerFormProdutos.style.display = "grid"; // Exibe formulário para o técnico cadastrar itens novos
+        if (containerFormProdutos) containerFormProdutos.style.display = "grid";
         if (containerImportarExcel) containerImportarExcel.style.display = "none";
-        if (thAcoesProdutos) thAcoesProdutos.style.display = "none"; // Oculta edição/exclusão de itens da tabela
+        if (thAcoesProdutos) thAcoesProdutos.style.display = "none";
     } 
     // SUPERVISOR
     else if (perfil === "supervisor") {
@@ -205,7 +228,7 @@ function mostrarPagina(pagina) {
         paginaAlvo.classList.remove("oculto");
     }
 
-    if (usuarioLogado && unidadeSelecionada && pagina !== 'login' && pagina !== 'selecaoUnidade') {
+    if (usuarioLogado && unidadeSelecionada && pagina !== 'login' && pagina !== 'recuperarSenha' && pagina !== 'selecaoUnidade') {
         atualizarSistema();
     }
 }
@@ -266,13 +289,14 @@ function cadastrarNovoUsuario() {
     }
 
     const nome = document.getElementById("novoNomeUsuario").value.trim();
+    const email = document.getElementById("novoEmailUsuario").value.trim().toLowerCase();
     const login = document.getElementById("novoLoginUsuario").value.trim().toLowerCase();
     const senha = document.getElementById("novaSenhaUsuario").value.trim();
     const perfil = document.getElementById("novoPerfilUsuario").value;
     const unidadeId = document.getElementById("novaUnidadeUsuario").value;
 
     if (!nome || !login || !senha) {
-        alert("Preencha todos os campos para cadastrar o usuário.");
+        alert("Preencha todos os campos obrigatórios para cadastrar o usuário.");
         return;
     }
 
@@ -282,10 +306,11 @@ function cadastrarNovoUsuario() {
         return;
     }
 
-    usuarios.push({ nome, login, senha, perfil, unidadeId });
+    usuarios.push({ nome, email, login, senha, perfil, unidadeId });
     salvarDados();
 
     document.getElementById("novoNomeUsuario").value = "";
+    document.getElementById("novoEmailUsuario").value = "";
     document.getElementById("novoLoginUsuario").value = "";
     document.getElementById("novaSenhaUsuario").value = "";
 
@@ -303,6 +328,7 @@ function listarUsuarios() {
         const linha = document.createElement("tr");
         linha.innerHTML = `
             <td>${u.nome}</td>
+            <td>${u.email || "-"}</td>
             <td><code>${u.login}</code></td>
             <td><strong>${u.perfil.toUpperCase()}</strong></td>
             <td>${u.unidadeId}</td>
@@ -503,7 +529,6 @@ function registrarMovimentacao() {
         return;
     }
 
-    // 1. ENTRADA DE MATERIAL (Livre para Técnicos, Supervisores e Coordenadores)
     if (tipo === "entrada") {
         produto.estoque += quantidade;
 
@@ -520,16 +545,13 @@ function registrarMovimentacao() {
         });
 
         alert(`Entrada de ${quantidade} un. de "${produto.nome}" registrada com sucesso!`);
-    } 
-    // 2. SAÍDA / RETIRADA DE MATERIAL
-    else {
+    } else {
         if (quantidade > produto.estoque) {
             alert(`Estoque insuficiente! Saldo disponível: ${produto.estoque}`);
             return;
         }
 
         if (usuarioLogado.perfil === "tecnico") {
-            // Técnico gera solicitação pendente
             pendencias.push({
                 id: Date.now(),
                 unidadeId: unidadeSelecionada.id,
@@ -545,7 +567,6 @@ function registrarMovimentacao() {
 
             alert("Solicitação de saída enviada com sucesso! Aguardando aprovação do Supervisor.");
         } else {
-            // Supervisor/Coordenador efetuando saída direta
             produto.estoque -= quantidade;
 
             movimentacoes.push({
@@ -626,10 +647,8 @@ function aprovarPendencia(index) {
         return;
     }
 
-    // Debita do estoque
     produto.estoque -= item.quantidade;
 
-    // Registra no histórico oficial
     movimentacoes.push({
         id: Date.now(),
         unidadeId: item.unidadeId,
@@ -642,7 +661,6 @@ function aprovarPendencia(index) {
         usuarioResponsavel: item.solicitante
     });
 
-    // Remove da fila de pendências
     pendencias.splice(index, 1);
 
     salvarDados();
