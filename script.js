@@ -21,22 +21,35 @@ let usuarioLogado = JSON.parse(
 // ========================================
 
 function realizarLogin() {
+    const usuarioVal = document.getElementById("usuarioInput").value.trim();
+    const senhaVal = document.getElementById("senhaInput").value.trim();
     const select = document.getElementById("selectUsuarioLogin");
     const unidadeValor = select.value;
     const unidadeTexto = select.options[select.selectedIndex].text;
 
-    usuarioLogado = {
-        unidadeId: unidadeValor, // 'PELOTAS' ou 'PORTO_ALEGRE'
-        unidadeNome: unidadeTexto
-    };
+    // Validação de Usuário e Senha (usuário padrão: admin / senha: 1234)
+    if (usuarioVal === "admin" && senhaVal === "1234") {
+        usuarioLogado = {
+            usuario: usuarioVal,
+            unidadeId: unidadeValor, // 'PELOTAS' ou 'PORTO_ALEGRE'
+            unidadeNome: unidadeTexto
+        };
 
-    sessionStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
-    iniciarSessao();
+        sessionStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
+        iniciarSessao();
+    } else {
+        alert("Usuário ou senha incorretos! (Padrão: admin / 1234)");
+    }
 }
 
 function realizarLogout() {
     sessionStorage.removeItem("usuarioLogado");
     usuarioLogado = null;
+    
+    // Limpa campos de login ao sair
+    document.getElementById("usuarioInput").value = "";
+    document.getElementById("senhaInput").value = "";
+
     iniciarSessao();
 }
 
@@ -49,7 +62,7 @@ function iniciarSessao() {
         menuNav.classList.remove("oculto");
         infoHeader.classList.remove("oculto");
         if (nomeUnidadeElem) {
-            nomeUnidadeElem.textContent = usuarioLogado.unidadeNome;
+            nomeUnidadeElem.textContent = `${usuarioLogado.usuario} | ${usuarioLogado.unidadeNome}`;
         }
 
         // Atualiza os títulos das páginas com o nome da unidade
@@ -200,7 +213,7 @@ function salvarProduto() {
 
             id: Date.now(),
 
-            unidadeId: usuarioLogado.unidadeId, // VINCULA À UNIDADE ATUAL
+            unidadeId: usuarioLogado.unidadeId,
 
             nome: nome,
 
@@ -271,7 +284,6 @@ function listarProdutos() {
     tabela.innerHTML = "";
 
 
-    // Filtra produtos pertencentes APENAS à unidade atual
     const lista = produtos.filter(function(produto) {
 
         const pertenceAUnidade = produto.unidadeId === usuarioLogado.unidadeId;
@@ -443,7 +455,6 @@ function atualizarSelectProdutos() {
         '<option value="">Selecione um produto</option>';
 
 
-    // Filtra produtos por unidade no select
     const produtosUnidade = produtos.filter(p => p.unidadeId === usuarioLogado.unidadeId);
 
     produtosUnidade.forEach(function(produto) {
@@ -563,12 +574,11 @@ function registrarMovimentacao() {
     }
 
 
-    // REGISTRA HISTÓRICO COM UNIDADE
     movimentacoes.push({
 
         id: Date.now(),
 
-        unidadeId: usuarioLogado.unidadeId, // VINCULA À UNIDADE
+        unidadeId: usuarioLogado.unidadeId,
 
         data: new Date().toLocaleString("pt-BR"),
 
@@ -608,8 +618,6 @@ function registrarMovimentacao() {
     );
 
 
-    // ALERTA DE ESTOQUE BAIXO
-
     if (produto.estoque <= produto.minimo) {
 
         alert(
@@ -641,7 +649,6 @@ function listarHistorico() {
     tabela.innerHTML = "";
 
 
-    // Filtra histórico por unidade
     const historicoUnidade = movimentacoes.filter(m => m.unidadeId === usuarioLogado.unidadeId);
 
     const lista =
