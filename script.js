@@ -9,6 +9,29 @@ const UNIDADES_PADRAO = [
     { id: "SRS4", nome: "SRS4 SANTA MARIA - RS" }
 ];
 
+const CARGOS_PADRAO = [
+    {
+        id: "admin",
+        nome: "Administrador Master",
+        permissoes: ["ver_dashboard", "cadastrar_produto", "editar_produto", "movimentar_direto", "aprovar_pendencias", "gerenciar_usuarios", "gerenciar_cargos", "exportar_excel"]
+    },
+    {
+        id: "coordenador",
+        nome: "Coordenador Geral",
+        permissoes: ["ver_dashboard", "cadastrar_produto", "editar_produto", "movimentar_direto", "aprovar_pendencias", "gerenciar_usuarios", "exportar_excel"]
+    },
+    {
+        id: "supervisor",
+        nome: "Supervisor de Unidade",
+        permissoes: ["ver_dashboard", "cadastrar_produto", "editar_produto", "movimentar_direto", "aprovar_pendencias", "exportar_excel"]
+    },
+    {
+        id: "tecnico",
+        nome: "Técnico Operacional",
+        permissoes: ["cadastrar_produto"]
+    }
+];
+
 const USUARIOS_PADRAO = [
     { login: "admin", email: "admin@empresa.com", senha: "1234", perfil: "admin", nome: "Admin Master", unidadeId: "TODAS" },
     { login: "coordenador", email: "coordenador@empresa.com", senha: "1234", perfil: "coordenador", nome: "Coordenador Geral", unidadeId: "TODAS" },
@@ -17,6 +40,7 @@ const USUARIOS_PADRAO = [
 ];
 
 let unidades = JSON.parse(localStorage.getItem("unidades")) || UNIDADES_PADRAO;
+let cargos = JSON.parse(localStorage.getItem("cargos")) || CARGOS_PADRAO;
 let usuarios = JSON.parse(localStorage.getItem("usuarios")) || USUARIOS_PADRAO;
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
@@ -26,19 +50,26 @@ let pendencias = JSON.parse(localStorage.getItem("pendencias")) || [];
 let usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado")) || null;
 let unidadeSelecionada = JSON.parse(sessionStorage.getItem("unidadeSelecionada")) || null;
 
-
 // ========================================
 // PERSISTÊNCIA DE DADOS
 // ========================================
 
 function salvarDados() {
     localStorage.setItem("unidades", JSON.stringify(unidades));
+    localStorage.setItem("cargos", JSON.stringify(cargos));
     localStorage.setItem("usuarios", JSON.stringify(usuarios));
     localStorage.setItem("produtos", JSON.stringify(produtos));
     localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
     localStorage.setItem("pendencias", JSON.stringify(pendencias));
 }
 
+// Helper para verificar se o usuário atual possui determinada permissão
+function temPermissao(permissao) {
+    if (!usuarioLogado) return false;
+    const cargo = cargos.find(c => c.id === usuarioLogado.perfil);
+    if (!cargo) return false;
+    return cargo.permissoes.includes(permissao);
+}
 
 // ========================================
 // AUTENTICAÇÃO E RECUPERAÇÃO DE SENHA
@@ -73,9 +104,9 @@ function enviarEmailRecuperacao() {
     );
 
     if (conta) {
-        alert(`Instruções de redefinição enviadas para o e-mail cadastrado de "${conta.nome}"!\n\n(Simulação: Verifique sua caixa de entrada).`);
+        alert(`Instruções de redefinição enviadas para o e-mail cadastrado de "${conta.nome}"!`);
     } else {
-        alert("Se o e-mail/usuário estiver cadastrado no sistema, você receberá um link de redefinição em instantes.");
+        alert("Se o e-mail/usuário estiver cadastrado, você receberá o link de redefinição.");
     }
 
     document.getElementById("emailRecuperacaoInput").value = "";
@@ -99,7 +130,7 @@ function exibirSelecaoUnidades() {
     grid.innerHTML = "";
 
     const unidadesAcessiveis = unidades.filter(u => {
-        if (usuarioLogado.unidadeId === "TODAS" || usuarioLogado.perfil === "admin" || usuarioLogado.perfil === "coordenador") {
+        if (usuarioLogado.unidadeId === "TODAS" || temPermissao("gerenciar_usuarios")) {
             return true;
         }
         return u.id === usuarioLogado.unidadeId;
@@ -133,44 +164,26 @@ function voltarParaSelecaoUnidades() {
 function aplicarPermissoesInterface() {
     if (!usuarioLogado) return;
 
-    const perfil = usuarioLogado.perfil;
-
     const navDashboard = document.getElementById("navDashboard");
     const navPendencias = document.getElementById("navPendencias");
     const navUsuarios = document.getElementById("navUsuarios");
+    const navCargos = document.getElementById("navCargos");
+    
     const containerFormProdutos = document.getElementById("containerFormProdutos");
     const containerImportarExcel = document.getElementById("containerImportarExcel");
     const thAcoesProdutos = document.getElementById("thAcoesProdutos");
 
     const badgeCount = document.getElementById("badgePendenciasCount");
-    if (badgeCount) {
-        badgeCount.textContent = pendencias.length;
-    }
+    if (badgeCount) badgeCount.textContent = pendencias.length;
 
-    if (perfil === "tecnico") {
-        if (navDashboard) navDashboard.style.display = "none";
-        if (navPendencias) navPendencias.style.display = "none";
-        if (navUsuarios) navUsuarios.style.display = "none";
-        if (containerFormProdutos) containerFormProdutos.style.display = "grid";
-        if (containerImportarExcel) containerImportarExcel.style.display = "none";
-        if (thAcoesProdutos) thAcoesProdutos.style.display = "none";
-    } 
-    else if (perfil === "supervisor") {
-        if (navDashboard) navDashboard.style.display = "inline-block";
-        if (navPendencias) navPendencias.style.display = "inline-block";
-        if (navUsuarios) navUsuarios.style.display = "none";
-        if (containerFormProdutos) containerFormProdutos.style.display = "grid";
-        if (containerImportarExcel) containerImportarExcel.style.display = "block";
-        if (thAcoesProdutos) thAcoesProdutos.style.display = "table-cell";
-    } 
-    else {
-        if (navDashboard) navDashboard.style.display = "inline-block";
-        if (navPendencias) navPendencias.style.display = "inline-block";
-        if (navUsuarios) navUsuarios.style.display = "inline-block";
-        if (containerFormProdutos) containerFormProdutos.style.display = "grid";
-        if (containerImportarExcel) containerImportarExcel.style.display = "block";
-        if (thAcoesProdutos) thAcoesProdutos.style.display = "table-cell";
-    }
+    if (navDashboard) navDashboard.style.display = temPermissao("ver_dashboard") ? "inline-block" : "none";
+    if (navPendencias) navPendencias.style.display = temPermissao("aprovar_pendencias") ? "inline-block" : "none";
+    if (navUsuarios) navUsuarios.style.display = temPermissao("gerenciar_usuarios") ? "inline-block" : "none";
+    if (navCargos) navCargos.style.display = temPermissao("gerenciar_cargos") ? "inline-block" : "none";
+
+    if (containerFormProdutos) containerFormProdutos.style.display = temPermissao("cadastrar_produto") ? "grid" : "none";
+    if (containerImportarExcel) containerImportarExcel.style.display = temPermissao("exportar_excel") ? "block" : "none";
+    if (thAcoesProdutos) thAcoesProdutos.style.display = temPermissao("editar_produto") ? "table-cell" : "none";
 }
 
 function iniciarSessao() {
@@ -199,10 +212,10 @@ function iniciarSessao() {
 
         aplicarPermissoesInterface();
 
-        if (usuarioLogado.perfil === "tecnico") {
-            mostrarPagina("movimentacao");
-        } else {
+        if (temPermissao("ver_dashboard")) {
             mostrarPagina("dashboard");
+        } else {
+            mostrarPagina("movimentacao");
         }
     } else {
         menuNav.classList.add("oculto");
@@ -210,7 +223,6 @@ function iniciarSessao() {
         mostrarPagina("login");
     }
 }
-
 
 // ========================================
 // NAVEGAÇÃO
@@ -229,14 +241,94 @@ function mostrarPagina(pagina) {
     }
 }
 
+// ========================================
+// GESTÃO DE CARGOS E PERMISSÕES (NOVO)
+// ========================================
+
+function cadastrarNovoCargo() {
+    if (!temPermissao("gerenciar_cargos")) {
+        alert("Você não possui permissão para gerenciar cargos.");
+        return;
+    }
+
+    const nome = document.getElementById("novoNomeCargo").value.trim();
+    if (!nome) {
+        alert("Informe o nome do cargo.");
+        return;
+    }
+
+    const id = nome.toLowerCase().replace(/\s+/g, '_');
+    const checkboxes = document.querySelectorAll(".chk-perm:checked");
+    const permissoes = Array.from(checkboxes).map(c => c.value);
+
+    const existe = cargos.some(c => c.id === id);
+    if (existe) {
+        alert("Já existe um cargo registrado com esse nome.");
+        return;
+    }
+
+    cargos.push({ id, nome, permissoes });
+    salvarDados();
+
+    document.getElementById("novoNomeCargo").value = "";
+    document.querySelectorAll(".chk-perm").forEach(c => c.checked = false);
+
+    listarCargos();
+    atualizarOptionsPerfis();
+    alert(`Cargo "${nome}" cadastrado com sucesso!`);
+}
+
+function listarCargos() {
+    const tabela = document.getElementById("tabelaCargos");
+    if (!tabela) return;
+
+    tabela.innerHTML = "";
+
+    cargos.forEach((c, index) => {
+        const linha = document.createElement("tr");
+        const listagemPermissoes = c.permissoes.length > 0 ? c.permissoes.join(", ") : "Nenhuma permissão";
+
+        linha.innerHTML = `
+            <td><strong>${c.nome}</strong></td>
+            <td><small>${listagemPermissoes}</small></td>
+            <td>
+                ${['admin', 'coordenador', 'supervisor', 'tecnico'].includes(c.id) 
+                    ? '<em>Padrão Sistema</em>' 
+                    : `<button class="btn-excluir" onclick="removerCargo(${index})">Remover</button>`}
+            </td>
+        `;
+        tabela.appendChild(linha);
+    });
+}
+
+function removerCargo(index) {
+    if (!confirm("Deseja realmente excluir este cargo personalizado?")) return;
+    cargos.splice(index, 1);
+    salvarDados();
+    listarCargos();
+    atualizarOptionsPerfis();
+}
+
+function atualizarOptionsPerfis() {
+    const select = document.getElementById("novoPerfilUsuario");
+    if (!select) return;
+
+    select.innerHTML = "";
+    cargos.forEach(c => {
+        const option = document.createElement("option");
+        option.value = c.id;
+        option.textContent = c.nome;
+        select.appendChild(option);
+    });
+}
 
 // ========================================
 // GESTÃO DE UNIDADES E USUÁRIOS
 // ========================================
 
 function cadastrarNovaUnidade() {
-    if (!usuarioLogado || (usuarioLogado.perfil !== "coordenador" && usuarioLogado.perfil !== "admin")) {
-        alert("Apenas Coordenadores ou Admins podem criar novas unidades.");
+    if (!temPermissao("gerenciar_usuarios")) {
+        alert("Sem permissão para criar unidades.");
         return;
     }
 
@@ -248,8 +340,7 @@ function cadastrarNovaUnidade() {
         return;
     }
 
-    const existe = unidades.some(u => u.id === id);
-    if (existe) {
+    if (unidades.some(u => u.id === id)) {
         alert("Já existe uma unidade com este código.");
         return;
     }
@@ -269,7 +360,6 @@ function atualizarOptionsUnidades() {
     if (!select) return;
 
     select.innerHTML = '<option value="TODAS">TODAS (Acesso Total)</option>';
-
     unidades.forEach(u => {
         const option = document.createElement("option");
         option.value = u.id;
@@ -279,8 +369,8 @@ function atualizarOptionsUnidades() {
 }
 
 function cadastrarNovoUsuario() {
-    if (!usuarioLogado || (usuarioLogado.perfil !== "coordenador" && usuarioLogado.perfil !== "admin")) {
-        alert("Apenas Coordenadores ou Admins podem cadastrar usuários.");
+    if (!temPermissao("gerenciar_usuarios")) {
+        alert("Sem permissão para cadastrar usuários.");
         return;
     }
 
@@ -292,12 +382,11 @@ function cadastrarNovoUsuario() {
     const unidadeId = document.getElementById("novaUnidadeUsuario").value;
 
     if (!nome || !login || !senha) {
-        alert("Preencha todos os campos obrigatórios para cadastrar o usuário.");
+        alert("Preencha os campos obrigatórios.");
         return;
     }
 
-    const existe = usuarios.some(u => u.login.toLowerCase() === login);
-    if (existe) {
+    if (usuarios.some(u => u.login.toLowerCase() === login)) {
         alert("Já existe um usuário com esse login.");
         return;
     }
@@ -311,7 +400,7 @@ function cadastrarNovoUsuario() {
     document.getElementById("novaSenhaUsuario").value = "";
 
     listarUsuarios();
-    alert(`Usuário ${nome} criado com sucesso e vinculado a: ${unidadeId}!`);
+    alert(`Usuário ${nome} criado com sucesso!`);
 }
 
 function listarUsuarios() {
@@ -321,12 +410,15 @@ function listarUsuarios() {
     tabela.innerHTML = "";
 
     usuarios.forEach((u, index) => {
+        const cargoObj = cargos.find(c => c.id === u.perfil);
+        const nomeCargo = cargoObj ? cargoObj.nome : u.perfil;
+
         const linha = document.createElement("tr");
         linha.innerHTML = `
             <td>${u.nome}</td>
             <td>${u.email || "-"}</td>
             <td><code>${u.login}</code></td>
-            <td><strong>${u.perfil.toUpperCase()}</strong></td>
+            <td><strong>${nomeCargo}</strong></td>
             <td>${u.unidadeId}</td>
             <td>
                 ${u.login !== 'admin' ? `<button class="btn-excluir" onclick="removerUsuario(${index})">Remover</button>` : '-'}
@@ -337,19 +429,18 @@ function listarUsuarios() {
 }
 
 function removerUsuario(index) {
-    if (!confirm("Deseja realmente remover este usuário?")) return;
+    if (!confirm("Deseja remover este usuário?")) return;
     usuarios.splice(index, 1);
     salvarDados();
     listarUsuarios();
 }
-
 
 // ========================================
 // PRODUTOS
 // ========================================
 
 function salvarProduto() {
-    if (!usuarioLogado || !unidadeSelecionada) return;
+    if (!unidadeSelecionada || !temPermissao("cadastrar_produto")) return;
 
     const id = document.getElementById("produtoId").value;
     const nome = document.getElementById("nomeProduto").value.trim();
@@ -364,8 +455,8 @@ function salvarProduto() {
     }
 
     if (id) {
-        if (usuarioLogado.perfil === "tecnico") {
-            alert("Técnicos não têm permissão para editar produtos existentes.");
+        if (!temPermissao("editar_produto")) {
+            alert("Seu cargo não possui permissão para editar produtos.");
             return;
         }
 
@@ -392,7 +483,7 @@ function salvarProduto() {
             unidadeId: unidadeSelecionada.id,
             nome, codigo, categoria, estoque, minimo
         });
-        alert("Produto cadastrado com sucesso!");
+        alert("Produto cadastrado!");
     }
 
     salvarDados();
@@ -410,7 +501,7 @@ function limparFormulario() {
 }
 
 function listarProdutos() {
-    if (!usuarioLogado || !unidadeSelecionada) return;
+    if (!unidadeSelecionada) return;
 
     const tabela = document.getElementById("tabelaProdutos");
     const pesquisa = document.getElementById("pesquisa").value.toLowerCase();
@@ -418,13 +509,13 @@ function listarProdutos() {
     tabela.innerHTML = "";
 
     const lista = produtos.filter(produto => {
-        const pertenceAUnidade = produto.unidadeId === unidadeSelecionada.id;
-        const batePesquisa = (
+        const pertence = produto.unidadeId === unidadeSelecionada.id;
+        const bate = (
             produto.nome.toLowerCase().includes(pesquisa) ||
             produto.codigo.toLowerCase().includes(pesquisa) ||
             produto.categoria.toLowerCase().includes(pesquisa)
         );
-        return pertenceAUnidade && batePesquisa;
+        return pertence && bate;
     });
 
     lista.forEach(produto => {
@@ -432,7 +523,7 @@ function listarProdutos() {
         const linha = document.createElement("tr");
 
         let acoesHtml = "";
-        if (usuarioLogado.perfil !== "tecnico") {
+        if (temPermissao("editar_produto")) {
             acoesHtml = `
                 <td>
                     <button class="btn-editar" onclick="editarProduto(${produto.id})">Editar</button>
@@ -456,7 +547,7 @@ function listarProdutos() {
 }
 
 function editarProduto(id) {
-    if (!usuarioLogado || usuarioLogado.perfil === "tecnico") return;
+    if (!temPermissao("editar_produto")) return;
 
     const produto = produtos.find(p => p.id == id && p.unidadeId === unidadeSelecionada.id);
     if (!produto) return;
@@ -472,22 +563,20 @@ function editarProduto(id) {
 }
 
 function excluirProduto(id) {
-    if (!usuarioLogado || usuarioLogado.perfil === "tecnico") return;
+    if (!temPermissao("editar_produto")) return;
 
     const produto = produtos.find(p => p.id == id && p.unidadeId === unidadeSelecionada.id);
     if (!produto) return;
 
-    if (!confirm(`Deseja excluir o produto "${produto.nome}"?`)) return;
+    if (!confirm(`Excluir o produto "${produto.nome}"?`)) return;
 
     produtos = produtos.filter(p => !(p.id == id && p.unidadeId === unidadeSelecionada.id));
-
     salvarDados();
     atualizarSistema();
 }
 
-
 // ========================================
-// MOVIMENTAÇÕES E SOLICITAÇÕES
+// MOVIMENTAÇÃO E PENDÊNCIAS
 // ========================================
 
 function atualizarSelectProdutos() {
@@ -507,7 +596,7 @@ function atualizarSelectProdutos() {
 }
 
 function registrarMovimentacao() {
-    if (!usuarioLogado || !unidadeSelecionada) return;
+    if (!unidadeSelecionada) return;
 
     const produtoId = Number(document.getElementById("produtoMovimentacao").value);
     const tipo = document.getElementById("tipoMovimentacao").value;
@@ -515,15 +604,12 @@ function registrarMovimentacao() {
     const observacao = document.getElementById("observacaoMovimentacao").value;
 
     if (!produtoId || quantidade <= 0) {
-        alert("Selecione um produto e uma quantidade válida.");
+        alert("Selecione um produto e informe uma quantidade válida.");
         return;
     }
 
     const produto = produtos.find(p => p.id === produtoId && p.unidadeId === unidadeSelecionada.id);
-    if (!produto) {
-        alert("Produto não encontrado nesta unidade.");
-        return;
-    }
+    if (!produto) return;
 
     if (tipo === "entrada") {
         produto.estoque += quantidade;
@@ -540,29 +626,14 @@ function registrarMovimentacao() {
             usuarioResponsavel: usuarioLogado.nome
         });
 
-        alert(`Entrada de ${quantidade} un. de "${produto.nome}" registrada com sucesso!`);
+        alert(`Entrada de ${quantidade} un. registrada!`);
     } else {
         if (quantidade > produto.estoque) {
-            alert(`Estoque insuficiente! Saldo disponível: ${produto.estoque}`);
+            alert(`Estoque insuficiente! Saldo atual: ${produto.estoque}`);
             return;
         }
 
-        if (usuarioLogado.perfil === "tecnico") {
-            pendencias.push({
-                id: Date.now(),
-                unidadeId: unidadeSelecionada.id,
-                unidadeNome: unidadeSelecionada.nome,
-                produtoId: produto.id,
-                produtoNome: produto.nome,
-                produtoCodigo: produto.codigo,
-                quantidade,
-                observacao: observacao || "Solicitação de retirada",
-                solicitante: usuarioLogado.nome,
-                data: new Date().toLocaleString("pt-BR")
-            });
-
-            alert("Solicitação de saída enviada com sucesso! Aguardando aprovação do Supervisor.");
-        } else {
+        if (temPermissao("movimentar_direto")) {
             produto.estoque -= quantidade;
 
             movimentacoes.push({
@@ -577,7 +648,22 @@ function registrarMovimentacao() {
                 usuarioResponsavel: `${usuarioLogado.nome} (Saída Direta)`
             });
 
-            alert("Saída de estoque realizada!");
+            alert("Saída efetuada com sucesso!");
+        } else {
+            pendencias.push({
+                id: Date.now(),
+                unidadeId: unidadeSelecionada.id,
+                unidadeNome: unidadeSelecionada.nome,
+                produtoId: produto.id,
+                produtoNome: produto.nome,
+                produtoCodigo: produto.codigo,
+                quantidade,
+                observacao: observacao || "Solicitação de retirada",
+                solicitante: usuarioLogado.nome,
+                data: new Date().toLocaleString("pt-BR")
+            });
+
+            alert("Solicitação enviada! Aguardando aprovação de um perfil responsável.");
         }
     }
 
@@ -587,11 +673,6 @@ function registrarMovimentacao() {
     atualizarSistema();
 }
 
-
-// ========================================
-// APROVAÇÃO DE PENDÊNCIAS
-// ========================================
-
 function listarPendencias() {
     const tabela = document.getElementById("tabelaPendencias");
     if (!tabela) return;
@@ -599,7 +680,7 @@ function listarPendencias() {
     tabela.innerHTML = "";
 
     if (pendencias.length === 0) {
-        tabela.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#666;">Nenhuma solicitação pendente no momento.</td></tr>`;
+        tabela.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nenhuma solicitação pendente.</td></tr>`;
         return;
     }
 
@@ -622,24 +703,16 @@ function listarPendencias() {
 }
 
 function aprovarPendencia(index) {
-    if (!usuarioLogado || usuarioLogado.perfil === "tecnico") {
-        alert("Apenas Supervisores ou Coordenadores podem aprovar solicitações.");
+    if (!temPermissao("aprovar_pendencias")) {
+        alert("Sem permissão para aprovar.");
         return;
     }
 
     const item = pendencias[index];
     const produto = produtos.find(p => p.id === item.produtoId && p.unidadeId === item.unidadeId);
 
-    if (!produto) {
-        alert("Erro: O produto solicitado não existe mais no cadastro.");
-        pendencias.splice(index, 1);
-        salvarDados();
-        atualizarSistema();
-        return;
-    }
-
-    if (item.quantidade > produto.estoque) {
-        alert(`Não é possível aprovar: O estoque atual (${produto.estoque}) é menor que o solicitado (${item.quantidade}).`);
+    if (!produto || item.quantidade > produto.estoque) {
+        alert("Saldo em estoque insuficiente para aprovar esta retirada.");
         return;
     }
 
@@ -658,23 +731,19 @@ function aprovarPendencia(index) {
     });
 
     pendencias.splice(index, 1);
-
     salvarDados();
     atualizarSistema();
-    alert("Solicitação APROVADA e estoque atualizado!");
+    alert("Solicitação APROVADA!");
 }
 
 function recusarPendencia(index) {
-    if (!usuarioLogado || usuarioLogado.perfil === "tecnico") return;
-
-    if (!confirm("Deseja recusar esta solicitação de saída?")) return;
+    if (!temPermissao("aprovar_pendencias")) return;
+    if (!confirm("Recusar esta solicitação?")) return;
 
     pendencias.splice(index, 1);
     salvarDados();
     atualizarSistema();
-    alert("Solicitação recusada.");
 }
-
 
 // ========================================
 // HISTÓRICO & DASHBOARD
@@ -731,7 +800,7 @@ function listarProdutosBaixos() {
     });
 
     if (produtosBaixos.length === 0) {
-        tabela.innerHTML = `<tr><td colspan="5">✓ Nenhum produto com estoque baixo nesta unidade.</td></tr>`;
+        tabela.innerHTML = `<tr><td colspan="5">✓ Nenhum produto com estoque baixo.</td></tr>`;
     }
 }
 
@@ -750,14 +819,9 @@ function atualizarDashboard() {
 }
 
 function exportarProdutosExcel() {
-    if (!unidadeSelecionada) return;
+    if (!unidadeSelecionada || !temPermissao("exportar_excel")) return;
 
     const produtosUnidade = produtos.filter(p => p.unidadeId === unidadeSelecionada.id);
-    if (produtosUnidade.length === 0) {
-        alert("Não há produtos cadastrados nesta unidade.");
-        return;
-    }
-
     const dadosExcel = produtosUnidade.map(p => ({
         "Código": p.codigo,
         "Nome do Produto": p.nome,
@@ -769,19 +833,13 @@ function exportarProdutosExcel() {
     const ws = XLSX.utils.json_to_sheet(dadosExcel);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Produtos");
-
     XLSX.writeFile(wb, `produtos_${unidadeSelecionada.id}.xlsx`);
 }
 
 function exportarHistoricoExcel() {
-    if (!unidadeSelecionada) return;
+    if (!unidadeSelecionada || !temPermissao("exportar_excel")) return;
 
     const historicoUnidade = movimentacoes.filter(m => m.unidadeId === unidadeSelecionada.id);
-    if (historicoUnidade.length === 0) {
-        alert("Não há histórico para exportar.");
-        return;
-    }
-
     const dadosExcel = historicoUnidade.map(m => ({
         "Data": m.data,
         "Código": m.codigo,
@@ -795,7 +853,6 @@ function exportarHistoricoExcel() {
     const ws = XLSX.utils.json_to_sheet(dadosExcel);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Histórico");
-
     XLSX.writeFile(wb, `historico_${unidadeSelecionada.id}.xlsx`);
 }
 
@@ -804,6 +861,8 @@ function atualizarSistema() {
 
     aplicarPermissoesInterface();
     atualizarOptionsUnidades();
+    atualizarOptionsPerfis();
+    listarCargos();
     listarProdutos();
     listarHistorico();
     listarUsuarios();
