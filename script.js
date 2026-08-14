@@ -1,6 +1,14 @@
 // ========================================
-// BANCO DE DADOS LOCAL
+// BANCO DE DADOS LOCAL E USUÁRIOS CADASTRADOS
 // ========================================
+
+// Tabela de Usuários e Permissões
+const USUARIOS_SISTEMA = {
+    "admin": { senha: "1234", perfil: "admin", nome: "Admin Master" },
+    "coordenador": { senha: "1234", perfil: "coordenador", nome: "Coordenador" },
+    "supervisor": { senha: "1234", perfil: "supervisor", nome: "Supervisor" },
+    "tecnico": { senha: "1234", perfil: "tecnico", nome: "Técnico" }
+};
 
 let produtos = JSON.parse(
     localStorage.getItem("produtos")
@@ -17,28 +25,31 @@ let usuarioLogado = JSON.parse(
 
 
 // ========================================
-// CONTROLE DE AUTENTICAÇÃO / SESSÃO
+// CONTROLE DE AUTENTICAÇÃO E PERMISSÕES
 // ========================================
 
 function realizarLogin() {
-    const usuarioVal = document.getElementById("usuarioInput").value.trim();
+    const usuarioVal = document.getElementById("usuarioInput").value.trim().toLowerCase();
     const senhaVal = document.getElementById("senhaInput").value.trim();
     const select = document.getElementById("selectUsuarioLogin");
     const unidadeValor = select.value;
     const unidadeTexto = select.options[select.selectedIndex].text;
 
-    // Validação de Usuário e Senha (usuário padrão: admin / senha: 1234)
-    if (usuarioVal === "admin" && senhaVal === "1234") {
+    const conta = USUARIOS_SISTEMA[usuarioVal];
+
+    if (conta && conta.senha === senhaVal) {
         usuarioLogado = {
             usuario: usuarioVal,
-            unidadeId: unidadeValor, // 'PELOTAS' ou 'PORTO_ALEGRE'
+            nome: conta.nome,
+            perfil: conta.perfil, // admin, coordenador, supervisor, tecnico
+            unidadeId: unidadeValor,
             unidadeNome: unidadeTexto
         };
 
         sessionStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
         iniciarSessao();
     } else {
-        alert("Usuário ou senha incorretos! (Padrão: admin / 1234)");
+        alert("Usuário ou senha incorretos!\n\nUsuários de teste (senha 1234):\n- admin\n- coordenador\n- supervisor\n- tecnico");
     }
 }
 
@@ -46,11 +57,44 @@ function realizarLogout() {
     sessionStorage.removeItem("usuarioLogado");
     usuarioLogado = null;
     
-    // Limpa campos de login ao sair
     document.getElementById("usuarioInput").value = "";
     document.getElementById("senhaInput").value = "";
 
     iniciarSessao();
+}
+
+function aplicarPermissoesInterface() {
+    if (!usuarioLogado) return;
+
+    const perfil = usuarioLogado.perfil;
+
+    const navDashboard = document.getElementById("navDashboard");
+    const navProdutos = document.getElementById("navProdutos");
+    const containerFormProdutos = document.getElementById("containerFormProdutos");
+    const containerImportarExcel = document.getElementById("containerImportarExcel");
+    const thAcoesProdutos = document.getElementById("thAcoesProdutos");
+
+    // TÉCNICO: Apenas solicita entrada/saída e vê histórico
+    if (perfil === "tecnico") {
+        if (navDashboard) navDashboard.style.display = "none";
+        if (containerFormProdutos) containerFormProdutos.style.display = "none";
+        if (containerImportarExcel) containerImportarExcel.style.display = "none";
+        if (thAcoesProdutos) thAcoesProdutos.style.display = "none";
+    } 
+    // SUPERVISOR: Adiciona e remove produtos/movimentações, relatórios
+    else if (perfil === "supervisor") {
+        if (navDashboard) navDashboard.style.display = "inline-block";
+        if (containerFormProdutos) containerFormProdutos.style.display = "grid";
+        if (containerImportarExcel) containerImportarExcel.style.display = "block";
+        if (thAcoesProdutos) thAcoesProdutos.style.display = "table-cell";
+    } 
+    // ADMIN E COORDENADOR: Acesso Total
+    else {
+        if (navDashboard) navDashboard.style.display = "inline-block";
+        if (containerFormProdutos) containerFormProdutos.style.display = "grid";
+        if (containerImportarExcel) containerImportarExcel.style.display = "block";
+        if (thAcoesProdutos) thAcoesProdutos.style.display = "table-cell";
+    }
 }
 
 function iniciarSessao() {
@@ -61,16 +105,23 @@ function iniciarSessao() {
     if (usuarioLogado) {
         menuNav.classList.remove("oculto");
         infoHeader.classList.remove("oculto");
+        
         if (nomeUnidadeElem) {
-            nomeUnidadeElem.textContent = `${usuarioLogado.usuario} | ${usuarioLogado.unidadeNome}`;
+            nomeUnidadeElem.textContent = `${usuarioLogado.nome} (${usuarioLogado.perfil.toUpperCase()}) | ${usuarioLogado.unidadeNome}`;
         }
 
-        // Atualiza os títulos das páginas com o nome da unidade
         document.querySelectorAll(".badge-unidade").forEach(el => {
             el.textContent = usuarioLogado.unidadeNome;
         });
 
-        mostrarPagina("dashboard");
+        aplicarPermissoesInterface();
+
+        // Se for técnico, abre direto em movimentação
+        if (usuarioLogado.perfil === "tecnico") {
+            mostrarPagina("movimentacao");
+        } else {
+            mostrarPagina("dashboard");
+        }
     } else {
         menuNav.classList.add("oculto");
         infoHeader.classList.add("oculto");
@@ -80,20 +131,12 @@ function iniciarSessao() {
 
 
 // ========================================
-// SALVAR DADOS
+// SALVAR DADOS NO LOCALSTORAGE
 // ========================================
 
 function salvarDados() {
-
-    localStorage.setItem(
-        "produtos",
-        JSON.stringify(produtos)
-    );
-
-    localStorage.setItem(
-        "movimentacoes",
-        JSON.stringify(movimentacoes)
-    );
+    localStorage.setItem("produtos", JSON.stringify(produtos));
+    localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
 }
 
 
@@ -102,12 +145,7 @@ function salvarDados() {
 // ========================================
 
 function mostrarPagina(pagina) {
-
-    document.querySelectorAll(".pagina").forEach(function(secao) {
-
-        secao.classList.add("oculto");
-
-    });
+    document.querySelectorAll(".pagina").forEach(secao => secao.classList.add("oculto"));
 
     const paginaAlvo = document.getElementById(pagina);
     if (paginaAlvo) {
@@ -121,747 +159,435 @@ function mostrarPagina(pagina) {
 
 
 // ========================================
-// SALVAR PRODUTO
+// SALVAR / EDITAR PRODUTO
 // ========================================
 
 function salvarProduto() {
-
     if (!usuarioLogado) return;
 
-    const id = document
-        .getElementById("produtoId")
-        .value;
+    if (usuarioLogado.perfil === "tecnico") {
+        alert("Seu perfil de Técnico não possui permissão para cadastrar ou editar produtos.");
+        return;
+    }
 
-    const nome = document
-        .getElementById("nomeProduto")
-        .value
-        .trim();
-
-    const codigo = document
-        .getElementById("codigoProduto")
-        .value
-        .trim();
-
-    const categoria = document
-        .getElementById("categoriaProduto")
-        .value
-        .trim();
-
-    const estoque = Number(
-        document.getElementById("estoqueInicial").value
-    );
-
-    const minimo = Number(
-        document.getElementById("estoqueMinimo").value
-    );
-
+    const id = document.getElementById("produtoId").value;
+    const nome = document.getElementById("nomeProduto").value.trim();
+    const codigo = document.getElementById("codigoProduto").value.trim();
+    const categoria = document.getElementById("categoriaProduto").value.trim();
+    const estoque = Number(document.getElementById("estoqueInicial").value);
+    const minimo = Number(document.getElementById("estoqueMinimo").value);
 
     if (!nome || !codigo) {
-
         alert("Preencha o nome e o código do produto.");
-
         return;
     }
-
 
     if (estoque < 0 || minimo < 0) {
-
         alert("Os valores não podem ser negativos.");
-
         return;
     }
 
-
-    // EDITAR PRODUTO
-
     if (id) {
-
-        const produto = produtos.find(
-            p => p.id == id && p.unidadeId === usuarioLogado.unidadeId
-        );
-
+        const produto = produtos.find(p => p.id == id && p.unidadeId === usuarioLogado.unidadeId);
         if (produto) {
-
             produto.nome = nome;
             produto.codigo = codigo;
             produto.categoria = categoria;
             produto.minimo = minimo;
-
         }
-
         alert("Produto atualizado com sucesso.");
-
-    }
-
-    // NOVO PRODUTO
-
-    else {
-
+    } else {
         const codigoExiste = produtos.some(
             p => p.unidadeId === usuarioLogado.unidadeId && p.codigo.toLowerCase() === codigo.toLowerCase()
         );
 
         if (codigoExiste) {
-
             alert("Já existe um produto com este código nesta unidade.");
-
             return;
         }
 
-
         const novoProduto = {
-
             id: Date.now(),
-
             unidadeId: usuarioLogado.unidadeId,
-
             nome: nome,
-
             codigo: codigo,
-
             categoria: categoria,
-
             estoque: estoque,
-
             minimo: minimo
-
         };
 
-
         produtos.push(novoProduto);
-
         alert("Produto cadastrado com sucesso.");
-
     }
 
-
     salvarDados();
-
     limparFormulario();
-
     atualizarSistema();
 }
 
-
-// ========================================
-// LIMPAR FORMULÁRIO
-// ========================================
-
 function limparFormulario() {
-
     document.getElementById("produtoId").value = "";
-
     document.getElementById("nomeProduto").value = "";
-
     document.getElementById("codigoProduto").value = "";
-
     document.getElementById("categoriaProduto").value = "";
-
     document.getElementById("estoqueInicial").value = 0;
-
     document.getElementById("estoqueMinimo").value = 1;
 }
 
 
 // ========================================
-// LISTAR PRODUTOS (FILTRADO POR UNIDADE)
+// LISTAR E GERENCIAR PRODUTOS
 // ========================================
 
 function listarProdutos() {
-
     if (!usuarioLogado) return;
 
-    const tabela =
-        document.getElementById("tabelaProdutos");
-
-    const pesquisa =
-        document
-        .getElementById("pesquisa")
-        .value
-        .toLowerCase();
-
+    const tabela = document.getElementById("tabelaProdutos");
+    const pesquisa = document.getElementById("pesquisa").value.toLowerCase();
 
     tabela.innerHTML = "";
 
-
-    const lista = produtos.filter(function(produto) {
-
+    const lista = produtos.filter(produto => {
         const pertenceAUnidade = produto.unidadeId === usuarioLogado.unidadeId;
-
         const batePesquisa = (
             produto.nome.toLowerCase().includes(pesquisa) ||
             produto.codigo.toLowerCase().includes(pesquisa) ||
             produto.categoria.toLowerCase().includes(pesquisa)
         );
-
         return pertenceAUnidade && batePesquisa;
-
     });
 
+    lista.forEach(produto => {
+        const baixo = produto.estoque <= produto.minimo;
+        const linha = document.createElement("tr");
 
-    lista.forEach(function(produto) {
-
-        const baixo =
-            produto.estoque <= produto.minimo;
-
-
-        const linha =
-            document.createElement("tr");
-
+        let acoesHtml = "";
+        if (usuarioLogado.perfil !== "tecnico") {
+            acoesHtml = `
+                <td>
+                    <button class="btn-editar" onclick="editarProduto(${produto.id})">Editar</button>
+                    <button class="btn-excluir" onclick="excluirProduto(${produto.id})">Excluir</button>
+                </td>
+            `;
+        }
 
         linha.innerHTML = `
-
             <td>${produto.nome}</td>
-
             <td>${produto.codigo}</td>
-
             <td>${produto.categoria || "-"}</td>
-
             <td>${produto.estoque}</td>
-
             <td>${produto.minimo}</td>
-
-            <td>
-
-                ${
-                    baixo
-                    ? '<span class="status-baixo">⚠️ BAIXO</span>'
-                    : '<span class="status-ok">✓ OK</span>'
-                }
-
-            </td>
-
-            <td>
-
-                <button
-                    class="btn-editar"
-                    onclick="editarProduto(${produto.id})"
-                >
-                    Editar
-                </button>
-
-                <button
-                    class="btn-excluir"
-                    onclick="excluirProduto(${produto.id})"
-                >
-                    Excluir
-                </button>
-
-            </td>
-
+            <td>${baixo ? '<span class="status-baixo">⚠️ BAIXO</span>' : '<span class="status-ok">✓ OK</span>'}</td>
+            ${acoesHtml}
         `;
 
-
         tabela.appendChild(linha);
-
     });
-
 }
-
-
-// ========================================
-// EDITAR PRODUTO
-// ========================================
 
 function editarProduto(id) {
+    if (!usuarioLogado || usuarioLogado.perfil === "tecnico") return;
 
-    if (!usuarioLogado) return;
-
-    const produto =
-        produtos.find(p => p.id == id && p.unidadeId === usuarioLogado.unidadeId);
-
-
+    const produto = produtos.find(p => p.id == id && p.unidadeId === usuarioLogado.unidadeId);
     if (!produto) return;
 
+    document.getElementById("produtoId").value = produto.id;
+    document.getElementById("nomeProduto").value = produto.nome;
+    document.getElementById("codigoProduto").value = produto.codigo;
+    document.getElementById("categoriaProduto").value = produto.categoria;
+    document.getElementById("estoqueInicial").value = produto.estoque;
+    document.getElementById("estoqueMinimo").value = produto.minimo;
 
-    document.getElementById("produtoId").value =
-        produto.id;
-
-    document.getElementById("nomeProduto").value =
-        produto.nome;
-
-    document.getElementById("codigoProduto").value =
-        produto.codigo;
-
-    document.getElementById("categoriaProduto").value =
-        produto.categoria;
-
-    document.getElementById("estoqueInicial").value =
-        produto.estoque;
-
-    document.getElementById("estoqueMinimo").value =
-        produto.minimo;
-
-
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
-
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-
-// ========================================
-// EXCLUIR PRODUTO
-// ========================================
-
 function excluirProduto(id) {
+    if (!usuarioLogado || usuarioLogado.perfil === "tecnico") return;
 
-    if (!usuarioLogado) return;
-
-    const produto =
-        produtos.find(p => p.id == id && p.unidadeId === usuarioLogado.unidadeId);
-
-
+    const produto = produtos.find(p => p.id == id && p.unidadeId === usuarioLogado.unidadeId);
     if (!produto) return;
 
+    if (!confirm(`Deseja excluir o produto "${produto.nome}"?`)) return;
 
-    const confirmar = confirm(
-        `Deseja excluir o produto "${produto.nome}"?`
-    );
-
-
-    if (!confirmar) return;
-
-
-    produtos = produtos.filter(
-        p => !(p.id == id && p.unidadeId === usuarioLogado.unidadeId)
-    );
-
+    produtos = produtos.filter(p => !(p.id == id && p.unidadeId === usuarioLogado.unidadeId));
 
     salvarDados();
-
     atualizarSistema();
-
     alert("Produto excluído.");
 }
 
 
 // ========================================
-// ATUALIZAR SELECT DE PRODUTOS
+// IMPORTAR E EXPORTAR EXCEL (SHEETJS)
 // ========================================
 
-function atualizarSelectProdutos() {
-
+function exportarProdutosExcel() {
     if (!usuarioLogado) return;
-
-    const select =
-        document.getElementById(
-            "produtoMovimentacao"
-        );
-
-
-    select.innerHTML =
-        '<option value="">Selecione um produto</option>';
-
 
     const produtosUnidade = produtos.filter(p => p.unidadeId === usuarioLogado.unidadeId);
 
-    produtosUnidade.forEach(function(produto) {
+    if (produtosUnidade.length === 0) {
+        alert("Não há produtos cadastrados para exportar nesta unidade.");
+        return;
+    }
 
-        const option =
-            document.createElement("option");
+    const dadosExcel = produtosUnidade.map(p => ({
+        "Código": p.codigo,
+        "Nome do Produto": p.nome,
+        "Categoria": p.categoria || "-",
+        "Estoque Atual": p.estoque,
+        "Estoque Mínimo": p.minimo
+    }));
 
+    const ws = XLSX.utils.json_to_sheet(dadosExcel);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Produtos");
 
-        option.value = produto.id;
-
-
-        option.textContent =
-            `${produto.codigo} - ${produto.nome} (Estoque: ${produto.estoque})`;
-
-
-        select.appendChild(option);
-
-    });
-
+    XLSX.writeFile(wb, `produtos_${usuarioLogado.unidadeId}.xlsx`);
 }
 
-
-// ========================================
-// REGISTRAR MOVIMENTAÇÃO
-// ========================================
-
-function registrarMovimentacao() {
-
-    if (!usuarioLogado) return;
-
-    const produtoId =
-        Number(
-            document.getElementById(
-                "produtoMovimentacao"
-            ).value
-        );
-
-
-    const tipo =
-        document.getElementById(
-            "tipoMovimentacao"
-        ).value;
-
-
-    const quantidade =
-        Number(
-            document.getElementById(
-                "quantidadeMovimentacao"
-            ).value
-        );
-
-
-    const observacao =
-        document.getElementById(
-            "observacaoMovimentacao"
-        ).value;
-
-
-    if (!produtoId) {
-
-        alert("Selecione um produto.");
-
+function importarProdutosExcel(event) {
+    if (!usuarioLogado || usuarioLogado.perfil === "tecnico") {
+        alert("Seu perfil não permite importar dados.");
         return;
     }
 
+    const file = event.target.files[0];
+    if (!file) return;
 
-    if (quantidade <= 0) {
+    const reader = new FileReader();
 
-        alert("Informe uma quantidade válida.");
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const primeiraAba = workbook.SheetNames[0];
+            const linhas = XLSX.utils.sheet_to_json(workbook.Sheets[primeiraAba]);
 
-        return;
-    }
+            let cadastrados = 0;
 
+            linhas.forEach(linha => {
+                const codigo = String(linha["Código"] || linha["codigo"] || "").trim();
+                const nome = String(linha["Nome do Produto"] || linha["nome"] || "").trim();
+                const categoria = String(linha["Categoria"] || linha["categoria"] || "").trim();
+                const estoque = Number(linha["Estoque Atual"] || linha["estoque"] || 0);
+                const minimo = Number(linha["Estoque Mínimo"] || linha["minimo"] || 1);
 
-    const produto =
-        produtos.find(
-            p => p.id === produtoId && p.unidadeId === usuarioLogado.unidadeId
-        );
+                if (codigo && nome) {
+                    const indexExistente = produtos.findIndex(
+                        p => p.unidadeId === usuarioLogado.unidadeId && p.codigo.toLowerCase() === codigo.toLowerCase()
+                    );
 
+                    if (indexExistente !== -1) {
+                        produtos[indexExistente].nome = nome;
+                        produtos[indexExistente].categoria = categoria;
+                        produtos[indexExistente].estoque = estoque;
+                        produtos[indexExistente].minimo = minimo;
+                    } else {
+                        produtos.push({
+                            id: Date.now() + Math.random(),
+                            unidadeId: usuarioLogado.unidadeId,
+                            nome: nome,
+                            codigo: codigo,
+                            categoria: categoria,
+                            estoque: estoque,
+                            minimo: minimo
+                        });
+                    }
+                    cadastrados++;
+                }
+            });
 
-    if (!produto) {
-
-        alert("Produto não encontrado.");
-
-        return;
-    }
-
-
-    // ENTRADA
-
-    if (tipo === "entrada") {
-
-        produto.estoque += quantidade;
-
-    }
-
-
-    // SAÍDA
-
-    else {
-
-        if (quantidade > produto.estoque) {
-
-            alert(
-                `Estoque insuficiente!\n\n` +
-                `Produto: ${produto.nome}\n` +
-                `Estoque atual: ${produto.estoque}\n` +
-                `Quantidade solicitada: ${quantidade}`
-            );
-
-            return;
+            salvarDados();
+            atualizarSistema();
+            alert(`Processamento concluído! ${cadastrados} produto(s) importado(s)/atualizado(s).`);
+        } catch (err) {
+            alert("Erro ao ler arquivo Excel. Verifique se as colunas são: Código, Nome do Produto, Categoria, Estoque Atual, Estoque Mínimo.");
         }
+        event.target.value = "";
+    };
 
-
-        produto.estoque -= quantidade;
-
-    }
-
-
-    movimentacoes.push({
-
-        id: Date.now(),
-
-        unidadeId: usuarioLogado.unidadeId,
-
-        data: new Date().toLocaleString("pt-BR"),
-
-        produto: produto.nome,
-
-        codigo: produto.codigo,
-
-        tipo: tipo,
-
-        quantidade: quantidade,
-
-        observacao: observacao || "-"
-
-    });
-
-
-    salvarDados();
-
-
-    document.getElementById(
-        "quantidadeMovimentacao"
-    ).value = 1;
-
-
-    document.getElementById(
-        "observacaoMovimentacao"
-    ).value = "";
-
-
-    atualizarSistema();
-
-
-    alert(
-        tipo === "entrada"
-        ? "Entrada registrada com sucesso!"
-        : "Saída registrada com sucesso!"
-    );
-
-
-    if (produto.estoque <= produto.minimo) {
-
-        alert(
-            `⚠️ ATENÇÃO!\n\n` +
-            `O produto "${produto.nome}" está com estoque baixo.\n\n` +
-            `Estoque atual: ${produto.estoque}\n` +
-            `Estoque mínimo: ${produto.minimo}`
-        );
-
-    }
-
+    reader.readAsArrayBuffer(file);
 }
 
-
-// ========================================
-// HISTÓRICO (FILTRADO POR UNIDADE)
-// ========================================
-
-function listarHistorico() {
-
+function exportarHistoricoExcel() {
     if (!usuarioLogado) return;
-
-    const tabela =
-        document.getElementById(
-            "tabelaHistorico"
-        );
-
-
-    tabela.innerHTML = "";
-
 
     const historicoUnidade = movimentacoes.filter(m => m.unidadeId === usuarioLogado.unidadeId);
 
-    const lista =
-        [...historicoUnidade].reverse();
-
-
-    lista.forEach(function(mov) {
-
-        const linha =
-            document.createElement("tr");
-
-
-        const tipoTexto =
-            mov.tipo === "entrada"
-            ? '<span class="status-ok">⬆ Entrada</span>'
-            : '<span class="status-baixo">⬇ Saída</span>';
-
-
-        linha.innerHTML = `
-
-            <td>${mov.data}</td>
-
-            <td>
-                ${mov.codigo} - ${mov.produto}
-            </td>
-
-            <td>
-                ${tipoTexto}
-            </td>
-
-            <td>
-                ${mov.quantidade}
-            </td>
-
-            <td>
-                ${mov.observacao}
-            </td>
-
-        `;
-
-
-        tabela.appendChild(linha);
-
-    });
-
-}
-
-
-// ========================================
-// PRODUTOS COM ESTOQUE BAIXO (UNIDADE)
-// ========================================
-
-function listarProdutosBaixos() {
-
-    if (!usuarioLogado) return;
-
-    const tabela =
-        document.getElementById(
-            "tabelaBaixo"
-        );
-
-
-    tabela.innerHTML = "";
-
-
-    const produtosBaixos =
-        produtos.filter(
-            p => p.unidadeId === usuarioLogado.unidadeId && p.estoque <= p.minimo
-        );
-
-
-    produtosBaixos.forEach(function(produto) {
-
-        const linha =
-            document.createElement("tr");
-
-
-        linha.innerHTML = `
-
-            <td>${produto.nome}</td>
-
-            <td>${produto.codigo}</td>
-
-            <td>${produto.estoque}</td>
-
-            <td>${produto.minimo}</td>
-
-            <td>
-                <span class="status-baixo">
-                    ⚠️ ESTOQUE BAIXO
-                </span>
-            </td>
-
-        `;
-
-
-        tabela.appendChild(linha);
-
-    });
-
-
-    if (produtosBaixos.length === 0) {
-
-        tabela.innerHTML = `
-
-            <tr>
-
-                <td colspan="5">
-                    ✓ Nenhum produto com estoque baixo nesta unidade.
-                </td>
-
-            </tr>
-
-        `;
-
+    if (historicoUnidade.length === 0) {
+        alert("Não há histórico de movimentações para exportar.");
+        return;
     }
 
+    const dadosExcel = historicoUnidade.map(m => ({
+        "Data": m.data,
+        "Código": m.codigo,
+        "Produto": m.produto,
+        "Tipo": m.tipo.toUpperCase(),
+        "Quantidade": m.quantidade,
+        "Observação": m.observacao,
+        "Usuário": m.usuarioResponsavel || "-"
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dadosExcel);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Histórico");
+
+    XLSX.writeFile(wb, `historico_${usuarioLogado.unidadeId}.xlsx`);
 }
 
 
 // ========================================
-// ATUALIZAR DASHBOARD (FILTRADO)
+// MOVIMENTAÇÕES E DASHBOARD
 // ========================================
 
-function atualizarDashboard() {
-
+function atualizarSelectProdutos() {
     if (!usuarioLogado) return;
+
+    const select = document.getElementById("produtoMovimentacao");
+    select.innerHTML = '<option value="">Selecione um produto</option>';
 
     const produtosUnidade = produtos.filter(p => p.unidadeId === usuarioLogado.unidadeId);
 
-    const movimentacoesUnidade = movimentacoes.filter(m => m.unidadeId === usuarioLogado.unidadeId);
-
-
-    const totalProdutos =
-        produtosUnidade.length;
-
-
-    const totalEstoque =
-        produtosUnidade.reduce(
-            (total, produto) =>
-                total + produto.estoque,
-            0
-        );
-
-
-    const totalBaixo =
-        produtosUnidade.filter(
-            produto =>
-                produto.estoque <= produto.minimo
-        ).length;
-
-
-    const totalMovimentacoes =
-        movimentacoesUnidade.length;
-
-
-    document.getElementById(
-        "totalProdutos"
-    ).textContent =
-        totalProdutos;
-
-
-    document.getElementById(
-        "totalEstoque"
-    ).textContent =
-        totalEstoque;
-
-
-    document.getElementById(
-        "totalBaixo"
-    ).textContent =
-        totalBaixo;
-
-
-    document.getElementById(
-        "totalMovimentacoes"
-    ).textContent =
-        totalMovimentacoes;
-
-
-    listarProdutosBaixos();
-
+    produtosUnidade.forEach(produto => {
+        const option = document.createElement("option");
+        option.value = produto.id;
+        option.textContent = `${produto.codigo} - ${produto.nome} (Estoque: ${produto.estoque})`;
+        select.appendChild(option);
+    });
 }
 
+function registrarMovimentacao() {
+    if (!usuarioLogado) return;
 
-// ========================================
-// ATUALIZAR TODO O SISTEMA
-// ========================================
+    const produtoId = Number(document.getElementById("produtoMovimentacao").value);
+    const tipo = document.getElementById("tipoMovimentacao").value;
+    const quantidade = Number(document.getElementById("quantidadeMovimentacao").value);
+    const observacao = document.getElementById("observacaoMovimentacao").value;
+
+    if (!produtoId || quantidade <= 0) {
+        alert("Selecione um produto e uma quantidade válida.");
+        return;
+    }
+
+    const produto = produtos.find(p => p.id === produtoId && p.unidadeId === usuarioLogado.unidadeId);
+
+    if (!produto) {
+        alert("Produto não encontrado.");
+        return;
+    }
+
+    if (tipo === "entrada") {
+        produto.estoque += quantidade;
+    } else {
+        if (quantidade > produto.estoque) {
+            alert(`Estoque insuficiente! Estoque atual: ${produto.estoque}`);
+            return;
+        }
+        produto.estoque -= quantidade;
+    }
+
+    movimentacoes.push({
+        id: Date.now(),
+        unidadeId: usuarioLogado.unidadeId,
+        data: new Date().toLocaleString("pt-BR"),
+        produto: produto.nome,
+        codigo: produto.codigo,
+        tipo: tipo,
+        quantidade: quantidade,
+        observacao: observacao || "-",
+        usuarioResponsavel: usuarioLogado.nome
+    });
+
+    salvarDados();
+
+    document.getElementById("quantidadeMovimentacao").value = 1;
+    document.getElementById("observacaoMovimentacao").value = "";
+
+    atualizarSistema();
+
+    alert(tipo === "entrada" ? "Entrada registrada com sucesso!" : "Saída registrada com sucesso!");
+}
+
+function listarHistorico() {
+    if (!usuarioLogado) return;
+
+    const tabela = document.getElementById("tabelaHistorico");
+    tabela.innerHTML = "";
+
+    const historicoUnidade = movimentacoes.filter(m => m.unidadeId === usuarioLogado.unidadeId);
+    const lista = [...historicoUnidade].reverse();
+
+    lista.forEach(mov => {
+        const linha = document.createElement("tr");
+        const tipoTexto = mov.tipo === "entrada" 
+            ? '<span class="status-ok">⬆ Entrada</span>' 
+            : '<span class="status-baixo">⬇ Saída</span>';
+
+        linha.innerHTML = `
+            <td>${mov.data}</td>
+            <td>${mov.codigo} - ${mov.produto}</td>
+            <td>${tipoTexto}</td>
+            <td>${mov.quantidade}</td>
+            <td>${mov.observacao}</td>
+            <td><strong>${mov.usuarioResponsavel || "-"}</strong></td>
+        `;
+
+        tabela.appendChild(linha);
+    });
+}
+
+function listarProdutosBaixos() {
+    if (!usuarioLogado) return;
+
+    const tabela = document.getElementById("tabelaBaixo");
+    tabela.innerHTML = "";
+
+    const produtosBaixos = produtos.filter(
+        p => p.unidadeId === usuarioLogado.unidadeId && p.estoque <= p.minimo
+    );
+
+    produtosBaixos.forEach(produto => {
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+            <td>${produto.nome}</td>
+            <td>${produto.codigo}</td>
+            <td>${produto.estoque}</td>
+            <td>${produto.minimo}</td>
+            <td><span class="status-baixo">⚠️ ESTOQUE BAIXO</span></td>
+        `;
+        tabela.appendChild(linha);
+    });
+
+    if (produtosBaixos.length === 0) {
+        tabela.innerHTML = `<tr><td colspan="5">✓ Nenhum produto com estoque baixo nesta unidade.</td></tr>`;
+    }
+}
+
+function atualizarDashboard() {
+    if (!usuarioLogado) return;
+
+    const produtosUnidade = produtos.filter(p => p.unidadeId === usuarioLogado.unidadeId);
+    const movimentacoesUnidade = movimentacoes.filter(m => m.unidadeId === usuarioLogado.unidadeId);
+
+    document.getElementById("totalProdutos").textContent = produtosUnidade.length;
+    document.getElementById("totalEstoque").textContent = produtosUnidade.reduce((acc, p) => acc + p.estoque, 0);
+    document.getElementById("totalBaixo").textContent = produtosUnidade.filter(p => p.estoque <= p.minimo).length;
+    document.getElementById("totalMovimentacoes").textContent = movimentacoesUnidade.length;
+
+    listarProdutosBaixos();
+}
 
 function atualizarSistema() {
-
     if (!usuarioLogado) return;
 
     listarProdutos();
-
     listarHistorico();
-
     atualizarSelectProdutos();
-
     atualizarDashboard();
-
 }
 
-
-// ========================================
-// INICIALIZAÇÃO
-// ========================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function() {
-
-        iniciarSessao();
-
-    }
-);
+document.addEventListener("DOMContentLoaded", function() {
+    iniciarSessao();
+});
