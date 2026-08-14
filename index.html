@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Estoque</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Biblioteca SheetJS para Leitura e Exportação de Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -19,17 +21,17 @@
         </div>
 
         <nav id="menuNavegacao" class="oculto">
-            <button onclick="mostrarPagina('dashboard')">Dashboard</button>
-            <button onclick="mostrarPagina('produtos')">Produtos</button>
-            <button onclick="mostrarPagina('movimentacao')">Movimentação</button>
-            <button onclick="mostrarPagina('historico')">Histórico</button>
+            <button id="navDashboard" onclick="mostrarPagina('dashboard')">Dashboard</button>
+            <button id="navProdutos" onclick="mostrarPagina('produtos')">Produtos</button>
+            <button id="navMovimentacao" onclick="mostrarPagina('movimentacao')">Movimentação</button>
+            <button id="navHistorico" onclick="mostrarPagina('historico')">Histórico</button>
             <button class="btn-sair" onclick="realizarLogout()">Sair</button>
         </nav>
     </header>
 
     <main>
 
-        <!-- TELA DE LOGIN / SIMULAÇÃO -->
+        <!-- TELA DE LOGIN / AUTENTICAÇÃO -->
         <section id="login" class="pagina">
             <div class="card-login">
                 <h2>🔑 Acesso ao Sistema</h2>
@@ -37,7 +39,7 @@
 
                 <div class="campo-login">
                     <label for="usuarioInput">Usuário</label>
-                    <input type="text" id="usuarioInput" placeholder="Ex: admin">
+                    <input type="text" id="usuarioInput" placeholder="Ex: admin, supervisor, tecnico, coordenador">
                 </div>
 
                 <div class="campo-login">
@@ -56,6 +58,11 @@
                 <button class="btn-principal btn-block" onclick="realizarLogin()">
                     Entrar no Sistema
                 </button>
+                
+                <div class="dica-perfis">
+                    <small><strong>Usuários para teste (senha 1234):</strong><br>
+                    <code>admin</code> | <code>coordenador</code> | <code>supervisor</code> | <code>tecnico</code></small>
+                </div>
             </div>
         </section>
 
@@ -115,7 +122,8 @@
 
             <h1>Cadastro de Produtos - <span class="badge-unidade"></span></h1>
 
-            <div class="formulario">
+            <!-- Form de cadastro visível apenas para perfis permitidos -->
+            <div id="containerFormProdutos" class="formulario">
 
                 <input type="hidden" id="produtoId">
 
@@ -156,6 +164,18 @@
 
             <div class="painel">
 
+                <!-- Ações de Excel -->
+                <div class="acoes-excel">
+                    <button id="btnExportarExcel" class="btn-excel" onclick="exportarProdutosExcel()">
+                        📥 Baixar Produtos (Excel)
+                    </button>
+                    
+                    <div id="containerImportarExcel" class="importar-box">
+                        <label for="inputExcel" class="btn-excel btn-importar">📤 Subir Planilha (Excel)</label>
+                        <input type="file" id="inputExcel" accept=".xlsx, .xls" onchange="importarProdutosExcel(event)">
+                    </div>
+                </div>
+
                 <div class="barra-pesquisa">
                     <input
                         type="text"
@@ -174,7 +194,7 @@
                             <th>Estoque</th>
                             <th>Mínimo</th>
                             <th>Status</th>
-                            <th>Ações</th>
+                            <th id="thAcoesProdutos">Ações</th>
                         </tr>
                     </thead>
 
@@ -266,6 +286,12 @@
 
             <div class="painel">
 
+                <div class="acoes-excel">
+                    <button class="btn-excel" onclick="exportarHistoricoExcel()">
+                        📥 Baixar Histórico (Excel)
+                    </button>
+                </div>
+
                 <table>
 
                     <thead>
@@ -275,6 +301,7 @@
                             <th>Tipo</th>
                             <th>Quantidade</th>
                             <th>Observação</th>
+                            <th>Usuário</th>
                         </tr>
                     </thead>
 
