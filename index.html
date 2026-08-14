@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Estoque</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            📦 Controle de Estoque
+        </div>
+
+        <div id="infoUsuarioHeader" class="info-usuario oculto">
+            <span id="nomeUnidadeAtual"></span>
+        </div>
+
+        <nav id="menuNavegacao" class="oculto">
+            <button onclick="mostrarPagina('dashboard')">Dashboard</button>
+            <button onclick="mostrarPagina('produtos')">Produtos</button>
+            <button onclick="mostrarPagina('movimentacao')">Movimentação</button>
+            <button onclick="mostrarPagina('historico')">Histórico</button>
+            <button class="btn-sair" onclick="realizarLogout()">Sair</button>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- TELA DE LOGIN / SIMULAÇÃO -->
+        <section id="login" class="pagina">
+            <div class="card-login">
+                <h2>🔑 Acesso ao Sistema</h2>
+                <p>Selecione a unidade para simular o acesso:</p>
+
+                <div class="campo-login">
+                    <label for="selectUsuarioLogin">Unidade de Acesso</label>
+                    <select id="selectUsuarioLogin">
+                        <option value="PELOTAS">SRS2 PELOTAS - RS</option>
+                        <option value="PORTO_ALEGRE">SRS1 PORTO ALEGRE - RS</option>
+                    </select>
+                </div>
+
+                <button class="btn-principal btn-block" onclick="realizarLogin()">
+                    Entrar no Sistema
+                </button>
+            </div>
+        </section>
+
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="pagina oculto">
+
+            <h1>Dashboard - <span class="badge-unidade"></span></h1>
+
+            <div class="cards">
+
+                <div class="card">
+                    <h3>Produtos cadastrados</h3>
+                    <strong id="totalProdutos">0</strong>
+                </div>
+
+                <div class="card">
+                    <h3>Total em estoque</h3>
+                    <strong id="totalEstoque">0</strong>
+                </div>
+
+                <div class="card alerta-card">
+                    <h3>Estoque baixo</h3>
+                    <strong id="totalBaixo">0</strong>
+                </div>
+
+                <div class="card">
+                    <h3>Movimentações</h3>
+                    <strong id="totalMovimentacoes">0</strong>
+                </div>
+
+            </div>
+
+            <div class="painel">
+                <h2>⚠️ Produtos com estoque baixo</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Código</th>
+                            <th>Estoque</th>
+                            <th>Mínimo</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tabelaBaixo"></tbody>
+                </table>
+            </div>
+
+        </section>
+
+
+        <!-- PRODUTOS -->
+        <section id="produtos" class="pagina oculto">
+
+            <h1>Cadastro de Produtos - <span class="badge-unidade"></span></h1>
+
+            <div class="formulario">
+
+                <input type="hidden" id="produtoId">
+
+                <div>
+                    <label>Nome do produto</label>
+                    <input type="text" id="nomeProduto" placeholder="Ex: Motor WEG">
+                </div>
+
+                <div>
+                    <label>Código</label>
+                    <input type="text" id="codigoProduto" placeholder="Ex: MOT-001">
+                </div>
+
+                <div>
+                    <label>Categoria</label>
+                    <input type="text" id="categoriaProduto" placeholder="Ex: Motores">
+                </div>
+
+                <div>
+                    <label>Estoque inicial</label>
+                    <input type="number" id="estoqueInicial" min="0" value="0">
+                </div>
+
+                <div>
+                    <label>Estoque mínimo</label>
+                    <input type="number" id="estoqueMinimo" min="0" value="1">
+                </div>
+
+                <button class="btn-principal" onclick="salvarProduto()">
+                    Salvar Produto
+                </button>
+
+                <button class="btn-cancelar" onclick="limparFormulario()">
+                    Limpar
+                </button>
+
+            </div>
+
+            <div class="painel">
+
+                <div class="barra-pesquisa">
+                    <input
+                        type="text"
+                        id="pesquisa"
+                        placeholder="🔎 Pesquisar produto nesta unidade..."
+                        onkeyup="listarProdutos()"
+                    >
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Código</th>
+                            <th>Categoria</th>
+                            <th>Estoque</th>
+                            <th>Mínimo</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tabelaProdutos"></tbody>
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- MOVIMENTAÇÃO -->
+        <section id="movimentacao" class="pagina oculto">
+
+            <h1>Entrada / Saída de Estoque - <span class="badge-unidade"></span></h1>
+
+            <div class="formulario">
+
+                <div>
+                    <label>Produto</label>
+
+                    <select id="produtoMovimentacao">
+                        <option value="">Selecione um produto</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Tipo</label>
+
+                    <select id="tipoMovimentacao">
+                        <option value="entrada">Entrada</option>
+                        <option value="saida">Saída</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Quantidade</label>
+
+                    <input
+                        type="number"
+                        id="quantidadeMovimentacao"
+                        min="1"
+                        value="1"
+                    >
+                </div>
+
+                <div>
+                    <label>Observação</label>
+
+                    <input
+                        type="text"
+                        id="observacaoMovimentacao"
+                        placeholder="Ex: Compra / Uso na manutenção"
+                    >
+                </div>
+
+                <button
+                    class="btn-principal"
+                    onclick="registrarMovimentacao()"
+                >
+                    Registrar movimentação
+                </button>
+
+            </div>
+
+            <div class="informacao">
+                <h3>Como funciona?</h3>
+
+                <p>
+                    <strong>Entrada:</strong> adiciona quantidade ao estoque da unidade atual.
+                </p>
+
+                <p>
+                    <strong>Saída:</strong> remove quantidade do estoque da unidade atual.
+                </p>
+
+                <p>
+                    O sistema impede uma saída maior que o estoque disponível.
+                </p>
+            </div>
+
+        </section>
+
+
+        <!-- HISTÓRICO -->
+        <section id="historico" class="pagina oculto">
+
+            <h1>Histórico de Movimentações - <span class="badge-unidade"></span></h1>
+
+            <div class="painel">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Produto</th>
+                            <th>Tipo</th>
+                            <th>Quantidade</th>
+                            <th>Observação</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tabelaHistorico"></tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+        Sistema de Controle de Estoque
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
