@@ -98,7 +98,7 @@ nav button:hover {
     display: flex;
     flex-direction: column;
     text-align: left;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .btn-block {
