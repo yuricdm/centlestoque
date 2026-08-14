@@ -1,53 +1,49 @@
 // ========================================
-// BANCO DE DADOS LOCAL E USUÁRIOS CADASTRADOS
+// UNIDADES DISPONÍVEIS
+// ========================================
+const UNIDADES_SISTEMA = [
+    { id: "SRS1", nome: "SRS1 PORTO ALEGRE - RS" },
+    { id: "SRS2", nome: "SRS2 PELOTAS - RS" },
+    { id: "SRS3", nome: "SRS3 CAXIAS DO SUL - RS" },
+    { id: "SRS4", nome: "SRS4 SANTA MARIA - RS" }
+];
+
+// ========================================
+// BANCO DE DADOS LOCAL
 // ========================================
 
-// Tabela de Usuários e Permissões
-const USUARIOS_SISTEMA = {
-    "admin": { senha: "1234", perfil: "admin", nome: "Admin Master" },
-    "coordenador": { senha: "1234", perfil: "coordenador", nome: "Coordenador" },
-    "supervisor": { senha: "1234", perfil: "supervisor", nome: "Supervisor" },
-    "tecnico": { senha: "1234", perfil: "tecnico", nome: "Técnico" }
-};
+const USUARIOS_PADRAO = [
+    { login: "admin", senha: "1234", perfil: "admin", nome: "Admin Master", unidadeId: "TODAS" },
+    { login: "coordenador", senha: "1234", perfil: "coordenador", nome: "Coordenador Geral", unidadeId: "TODAS" },
+    { login: "supervisor", senha: "1234", perfil: "supervisor", nome: "Supervisor Pelotas", unidadeId: "SRS2" },
+    { login: "tecnico", senha: "1234", perfil: "tecnico", nome: "Técnico Silva", unidadeId: "SRS2" }
+];
 
-let produtos = JSON.parse(
-    localStorage.getItem("produtos")
-) || [];
-
-let movimentacoes = JSON.parse(
-    localStorage.getItem("movimentacoes")
-) || [];
+let usuarios = JSON.parse(localStorage.getItem("usuarios")) || USUARIOS_PADRAO;
+let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
 
 // USUÁRIO EM SESSÃO
-let usuarioLogado = JSON.parse(
-    sessionStorage.getItem("usuarioLogado")
-) || null;
+let usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado")) || null;
+let unidadeSelecionada = JSON.parse(sessionStorage.getItem("unidadeSelecionada")) || null;
 
 
 // ========================================
-// CONTROLE DE AUTENTICAÇÃO E PERMISSÕES
+// AUTENTICAÇÃO E SESSÃO
 // ========================================
 
 function realizarLogin() {
     const usuarioVal = document.getElementById("usuarioInput").value.trim().toLowerCase();
     const senhaVal = document.getElementById("senhaInput").value.trim();
-    const select = document.getElementById("selectUsuarioLogin");
-    const unidadeValor = select.value;
-    const unidadeTexto = select.options[select.selectedIndex].text;
 
-    const conta = USUARIOS_SISTEMA[usuarioVal];
+    const conta = usuarios.find(u => u.login.toLowerCase() === usuarioVal && u.senha === senhaVal);
 
-    if (conta && conta.senha === senhaVal) {
-        usuarioLogado = {
-            usuario: usuarioVal,
-            nome: conta.nome,
-            perfil: conta.perfil, // admin, coordenador, supervisor, tecnico
-            unidadeId: unidadeValor,
-            unidadeNome: unidadeTexto
-        };
-
+    if (conta) {
+        usuarioLogado = conta;
         sessionStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
-        iniciarSessao();
+        
+        // Direciona para a tela de escolha de unidades
+        exibirSelecaoUnidades();
     } else {
         alert("Usuário ou senha incorretos!\n\nUsuários de teste (senha 1234):\n- admin\n- coordenador\n- supervisor\n- tecnico");
     }
@@ -55,12 +51,51 @@ function realizarLogin() {
 
 function realizarLogout() {
     sessionStorage.removeItem("usuarioLogado");
+    sessionStorage.removeItem("unidadeSelecionada");
     usuarioLogado = null;
+    unidadeSelecionada = null;
     
     document.getElementById("usuarioInput").value = "";
     document.getElementById("senhaInput").value = "";
 
     iniciarSessao();
+}
+
+function exibirSelecaoUnidades() {
+    const grid = document.getElementById("gridUnidades");
+    grid.innerHTML = "";
+
+    // Filtra unidades que o usuário tem direito de acessar
+    const unidadesAcessiveis = UNIDADES_SISTEMA.filter(u => {
+        if (usuarioLogado.unidadeId === "TODAS" || usuarioLogado.perfil === "admin" || usuarioLogado.perfil === "coordenador") {
+            return true;
+        }
+        return u.id === usuarioLogado.unidadeId;
+    });
+
+    unidadesAcessiveis.forEach(unidade => {
+        const card = document.createElement("div");
+        card.className = "card-unidade";
+        card.innerHTML = `
+            <h3>🏢 ${unidade.nome}</h3>
+            <button class="btn-principal" onclick="selecionarUnidade('${unidade.id}', '${unidade.nome}')">Acessar Unidade</button>
+        `;
+        grid.appendChild(card);
+    });
+
+    mostrarPagina("selecaoUnidade");
+}
+
+function selecionarUnidade(id, nome) {
+    unidadeSelecionada = { id, nome };
+    sessionStorage.setItem("unidadeSelecionada", JSON.stringify(unidadeSelecionada));
+    iniciarSessao();
+}
+
+function voltarParaSelecaoUnidades() {
+    unidadeSelecionada = null;
+    sessionStorage.removeItem("unidadeSelecionada");
+    exibirSelecaoUnidades();
 }
 
 function aplicarPermissoesInterface() {
@@ -69,28 +104,31 @@ function aplicarPermissoesInterface() {
     const perfil = usuarioLogado.perfil;
 
     const navDashboard = document.getElementById("navDashboard");
-    const navProdutos = document.getElementById("navProdutos");
+    const navUsuarios = document.getElementById("navUsuarios");
     const containerFormProdutos = document.getElementById("containerFormProdutos");
     const containerImportarExcel = document.getElementById("containerImportarExcel");
     const thAcoesProdutos = document.getElementById("thAcoesProdutos");
 
-    // TÉCNICO: Apenas solicita entrada/saída e vê histórico
+    // TÉCNICO
     if (perfil === "tecnico") {
         if (navDashboard) navDashboard.style.display = "none";
+        if (navUsuarios) navUsuarios.style.display = "none";
         if (containerFormProdutos) containerFormProdutos.style.display = "none";
         if (containerImportarExcel) containerImportarExcel.style.display = "none";
         if (thAcoesProdutos) thAcoesProdutos.style.display = "none";
     } 
-    // SUPERVISOR: Adiciona e remove produtos/movimentações, relatórios
+    // SUPERVISOR
     else if (perfil === "supervisor") {
         if (navDashboard) navDashboard.style.display = "inline-block";
+        if (navUsuarios) navUsuarios.style.display = "none";
         if (containerFormProdutos) containerFormProdutos.style.display = "grid";
         if (containerImportarExcel) containerImportarExcel.style.display = "block";
         if (thAcoesProdutos) thAcoesProdutos.style.display = "table-cell";
     } 
-    // ADMIN E COORDENADOR: Acesso Total
+    // COORDENADOR E ADMIN
     else {
         if (navDashboard) navDashboard.style.display = "inline-block";
+        if (navUsuarios) navUsuarios.style.display = "inline-block";
         if (containerFormProdutos) containerFormProdutos.style.display = "grid";
         if (containerImportarExcel) containerImportarExcel.style.display = "block";
         if (thAcoesProdutos) thAcoesProdutos.style.display = "table-cell";
@@ -103,20 +141,26 @@ function iniciarSessao() {
     const nomeUnidadeElem = document.getElementById("nomeUnidadeAtual");
 
     if (usuarioLogado) {
+        if (!unidadeSelecionada) {
+            menuNav.classList.add("oculto");
+            infoHeader.classList.add("oculto");
+            exibirSelecaoUnidades();
+            return;
+        }
+
         menuNav.classList.remove("oculto");
         infoHeader.classList.remove("oculto");
         
         if (nomeUnidadeElem) {
-            nomeUnidadeElem.textContent = `${usuarioLogado.nome} (${usuarioLogado.perfil.toUpperCase()}) | ${usuarioLogado.unidadeNome}`;
+            nomeUnidadeElem.textContent = `${usuarioLogado.nome} (${usuarioLogado.perfil.toUpperCase()}) | ${unidadeSelecionada.nome}`;
         }
 
         document.querySelectorAll(".badge-unidade").forEach(el => {
-            el.textContent = usuarioLogado.unidadeNome;
+            el.textContent = unidadeSelecionada.nome;
         });
 
         aplicarPermissoesInterface();
 
-        // Se for técnico, abre direto em movimentação
         if (usuarioLogado.perfil === "tecnico") {
             mostrarPagina("movimentacao");
         } else {
@@ -131,17 +175,18 @@ function iniciarSessao() {
 
 
 // ========================================
-// SALVAR DADOS NO LOCALSTORAGE
+// PERSISTÊNCIA DE DADOS
 // ========================================
 
 function salvarDados() {
+    localStorage.setItem("usuarios", JSON.stringify(usuarios));
     localStorage.setItem("produtos", JSON.stringify(produtos));
     localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
 }
 
 
 // ========================================
-// TROCAR PÁGINAS
+// NAVEGAÇÃO DE PÁGINAS
 // ========================================
 
 function mostrarPagina(pagina) {
@@ -152,18 +197,85 @@ function mostrarPagina(pagina) {
         paginaAlvo.classList.remove("oculto");
     }
 
-    if (usuarioLogado && pagina !== 'login') {
+    if (usuarioLogado && unidadeSelecionada && pagina !== 'login' && pagina !== 'selecaoUnidade') {
         atualizarSistema();
     }
 }
 
 
 // ========================================
-// SALVAR / EDITAR PRODUTO
+// GESTÃO DE USUÁRIOS (COORDENADOR / ADMIN)
+// ========================================
+
+function cadastrarNovoUsuario() {
+    if (!usuarioLogado || (usuarioLogado.perfil !== "coordenador" && usuarioLogado.perfil !== "admin")) {
+        alert("Apenas Coordenadores ou Admins podem cadastrar usuários.");
+        return;
+    }
+
+    const nome = document.getElementById("novoNomeUsuario").value.trim();
+    const login = document.getElementById("novoLoginUsuario").value.trim().toLowerCase();
+    const senha = document.getElementById("novaSenhaUsuario").value.trim();
+    const perfil = document.getElementById("novoPerfilUsuario").value;
+    const unidadeId = document.getElementById("novaUnidadeUsuario").value;
+
+    if (!nome || !login || !senha) {
+        alert("Preencha todos os campos para cadastrar o usuário.");
+        return;
+    }
+
+    const existe = usuarios.some(u => u.login.toLowerCase() === login);
+    if (existe) {
+        alert("Já existe um usuário com esse login.");
+        return;
+    }
+
+    usuarios.push({ nome, login, senha, perfil, unidadeId });
+    salvarDados();
+
+    document.getElementById("novoNomeUsuario").value = "";
+    document.getElementById("novoLoginUsuario").value = "";
+    document.getElementById("novaSenhaUsuario").value = "";
+
+    listarUsuarios();
+    alert(`Usuário ${nome} criado com sucesso e vinculado a: ${unidadeId}!`);
+}
+
+function listarUsuarios() {
+    const tabela = document.getElementById("tabelaUsuarios");
+    if (!tabela) return;
+
+    tabela.innerHTML = "";
+
+    usuarios.forEach((u, index) => {
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+            <td>${u.nome}</td>
+            <td><code>${u.login}</code></td>
+            <td><strong>${u.perfil.toUpperCase()}</strong></td>
+            <td>${u.unidadeId}</td>
+            <td>
+                ${u.login !== 'admin' ? `<button class="btn-excluir" onclick="removerUsuario(${index})">Remover</button>` : '-'}
+            </td>
+        `;
+        tabela.appendChild(linha);
+    });
+}
+
+function removerUsuario(index) {
+    if (!confirm("Deseja realmente remover este usuário?")) return;
+    usuarios.splice(index, 1);
+    salvarDados();
+    listarUsuarios();
+}
+
+
+// ========================================
+// SALVAR E GERENCIAR PRODUTOS
 // ========================================
 
 function salvarProduto() {
-    if (!usuarioLogado) return;
+    if (!usuarioLogado || !unidadeSelecionada) return;
 
     if (usuarioLogado.perfil === "tecnico") {
         alert("Seu perfil de Técnico não possui permissão para cadastrar ou editar produtos.");
@@ -182,13 +294,8 @@ function salvarProduto() {
         return;
     }
 
-    if (estoque < 0 || minimo < 0) {
-        alert("Os valores não podem ser negativos.");
-        return;
-    }
-
     if (id) {
-        const produto = produtos.find(p => p.id == id && p.unidadeId === usuarioLogado.unidadeId);
+        const produto = produtos.find(p => p.id == id && p.unidadeId === unidadeSelecionada.id);
         if (produto) {
             produto.nome = nome;
             produto.codigo = codigo;
@@ -198,7 +305,7 @@ function salvarProduto() {
         alert("Produto atualizado com sucesso.");
     } else {
         const codigoExiste = produtos.some(
-            p => p.unidadeId === usuarioLogado.unidadeId && p.codigo.toLowerCase() === codigo.toLowerCase()
+            p => p.unidadeId === unidadeSelecionada.id && p.codigo.toLowerCase() === codigo.toLowerCase()
         );
 
         if (codigoExiste) {
@@ -206,17 +313,15 @@ function salvarProduto() {
             return;
         }
 
-        const novoProduto = {
+        produtos.push({
             id: Date.now(),
-            unidadeId: usuarioLogado.unidadeId,
-            nome: nome,
-            codigo: codigo,
-            categoria: categoria,
-            estoque: estoque,
-            minimo: minimo
-        };
-
-        produtos.push(novoProduto);
+            unidadeId: unidadeSelecionada.id,
+            nome,
+            codigo,
+            categoria,
+            estoque,
+            minimo
+        });
         alert("Produto cadastrado com sucesso.");
     }
 
@@ -234,13 +339,8 @@ function limparFormulario() {
     document.getElementById("estoqueMinimo").value = 1;
 }
 
-
-// ========================================
-// LISTAR E GERENCIAR PRODUTOS
-// ========================================
-
 function listarProdutos() {
-    if (!usuarioLogado) return;
+    if (!usuarioLogado || !unidadeSelecionada) return;
 
     const tabela = document.getElementById("tabelaProdutos");
     const pesquisa = document.getElementById("pesquisa").value.toLowerCase();
@@ -248,7 +348,7 @@ function listarProdutos() {
     tabela.innerHTML = "";
 
     const lista = produtos.filter(produto => {
-        const pertenceAUnidade = produto.unidadeId === usuarioLogado.unidadeId;
+        const pertenceAUnidade = produto.unidadeId === unidadeSelecionada.id;
         const batePesquisa = (
             produto.nome.toLowerCase().includes(pesquisa) ||
             produto.codigo.toLowerCase().includes(pesquisa) ||
@@ -288,7 +388,7 @@ function listarProdutos() {
 function editarProduto(id) {
     if (!usuarioLogado || usuarioLogado.perfil === "tecnico") return;
 
-    const produto = produtos.find(p => p.id == id && p.unidadeId === usuarioLogado.unidadeId);
+    const produto = produtos.find(p => p.id == id && p.unidadeId === unidadeSelecionada.id);
     if (!produto) return;
 
     document.getElementById("produtoId").value = produto.id;
@@ -304,12 +404,12 @@ function editarProduto(id) {
 function excluirProduto(id) {
     if (!usuarioLogado || usuarioLogado.perfil === "tecnico") return;
 
-    const produto = produtos.find(p => p.id == id && p.unidadeId === usuarioLogado.unidadeId);
+    const produto = produtos.find(p => p.id == id && p.unidadeId === unidadeSelecionada.id);
     if (!produto) return;
 
     if (!confirm(`Deseja excluir o produto "${produto.nome}"?`)) return;
 
-    produtos = produtos.filter(p => !(p.id == id && p.unidadeId === usuarioLogado.unidadeId));
+    produtos = produtos.filter(p => !(p.id == id && p.unidadeId === unidadeSelecionada.id));
 
     salvarDados();
     atualizarSistema();
@@ -318,16 +418,15 @@ function excluirProduto(id) {
 
 
 // ========================================
-// IMPORTAR E EXPORTAR EXCEL (SHEETJS)
+// IMPORTAR / EXPORTAR EXCEL
 // ========================================
 
 function exportarProdutosExcel() {
-    if (!usuarioLogado) return;
+    if (!unidadeSelecionada) return;
 
-    const produtosUnidade = produtos.filter(p => p.unidadeId === usuarioLogado.unidadeId);
-
+    const produtosUnidade = produtos.filter(p => p.unidadeId === unidadeSelecionada.id);
     if (produtosUnidade.length === 0) {
-        alert("Não há produtos cadastrados para exportar nesta unidade.");
+        alert("Não há produtos cadastrados nesta unidade.");
         return;
     }
 
@@ -343,11 +442,11 @@ function exportarProdutosExcel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Produtos");
 
-    XLSX.writeFile(wb, `produtos_${usuarioLogado.unidadeId}.xlsx`);
+    XLSX.writeFile(wb, `produtos_${unidadeSelecionada.id}.xlsx`);
 }
 
 function importarProdutosExcel(event) {
-    if (!usuarioLogado || usuarioLogado.perfil === "tecnico") {
+    if (!unidadeSelecionada || usuarioLogado.perfil === "tecnico") {
         alert("Seu perfil não permite importar dados.");
         return;
     }
@@ -375,7 +474,7 @@ function importarProdutosExcel(event) {
 
                 if (codigo && nome) {
                     const indexExistente = produtos.findIndex(
-                        p => p.unidadeId === usuarioLogado.unidadeId && p.codigo.toLowerCase() === codigo.toLowerCase()
+                        p => p.unidadeId === unidadeSelecionada.id && p.codigo.toLowerCase() === codigo.toLowerCase()
                     );
 
                     if (indexExistente !== -1) {
@@ -386,12 +485,8 @@ function importarProdutosExcel(event) {
                     } else {
                         produtos.push({
                             id: Date.now() + Math.random(),
-                            unidadeId: usuarioLogado.unidadeId,
-                            nome: nome,
-                            codigo: codigo,
-                            categoria: categoria,
-                            estoque: estoque,
-                            minimo: minimo
+                            unidadeId: unidadeSelecionada.id,
+                            nome, codigo, categoria, estoque, minimo
                         });
                     }
                     cadastrados++;
@@ -402,7 +497,7 @@ function importarProdutosExcel(event) {
             atualizarSistema();
             alert(`Processamento concluído! ${cadastrados} produto(s) importado(s)/atualizado(s).`);
         } catch (err) {
-            alert("Erro ao ler arquivo Excel. Verifique se as colunas são: Código, Nome do Produto, Categoria, Estoque Atual, Estoque Mínimo.");
+            alert("Erro ao ler arquivo Excel. Certifique-se das colunas: Código, Nome do Produto, Categoria, Estoque Atual, Estoque Mínimo.");
         }
         event.target.value = "";
     };
@@ -411,12 +506,11 @@ function importarProdutosExcel(event) {
 }
 
 function exportarHistoricoExcel() {
-    if (!usuarioLogado) return;
+    if (!unidadeSelecionada) return;
 
-    const historicoUnidade = movimentacoes.filter(m => m.unidadeId === usuarioLogado.unidadeId);
-
+    const historicoUnidade = movimentacoes.filter(m => m.unidadeId === unidadeSelecionada.id);
     if (historicoUnidade.length === 0) {
-        alert("Não há histórico de movimentações para exportar.");
+        alert("Não há histórico de movimentações para exportar nesta unidade.");
         return;
     }
 
@@ -434,7 +528,7 @@ function exportarHistoricoExcel() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Histórico");
 
-    XLSX.writeFile(wb, `historico_${usuarioLogado.unidadeId}.xlsx`);
+    XLSX.writeFile(wb, `historico_${unidadeSelecionada.id}.xlsx`);
 }
 
 
@@ -443,12 +537,12 @@ function exportarHistoricoExcel() {
 // ========================================
 
 function atualizarSelectProdutos() {
-    if (!usuarioLogado) return;
+    if (!unidadeSelecionada) return;
 
     const select = document.getElementById("produtoMovimentacao");
     select.innerHTML = '<option value="">Selecione um produto</option>';
 
-    const produtosUnidade = produtos.filter(p => p.unidadeId === usuarioLogado.unidadeId);
+    const produtosUnidade = produtos.filter(p => p.unidadeId === unidadeSelecionada.id);
 
     produtosUnidade.forEach(produto => {
         const option = document.createElement("option");
@@ -459,7 +553,7 @@ function atualizarSelectProdutos() {
 }
 
 function registrarMovimentacao() {
-    if (!usuarioLogado) return;
+    if (!usuarioLogado || !unidadeSelecionada) return;
 
     const produtoId = Number(document.getElementById("produtoMovimentacao").value);
     const tipo = document.getElementById("tipoMovimentacao").value;
@@ -471,18 +565,14 @@ function registrarMovimentacao() {
         return;
     }
 
-    const produto = produtos.find(p => p.id === produtoId && p.unidadeId === usuarioLogado.unidadeId);
-
-    if (!produto) {
-        alert("Produto não encontrado.");
-        return;
-    }
+    const produto = produtos.find(p => p.id === produtoId && p.unidadeId === unidadeSelecionada.id);
+    if (!produto) return;
 
     if (tipo === "entrada") {
         produto.estoque += quantidade;
     } else {
         if (quantidade > produto.estoque) {
-            alert(`Estoque insuficiente! Estoque atual: ${produto.estoque}`);
+            alert(`Estoque insuficiente! Disponível: ${produto.estoque}`);
             return;
         }
         produto.estoque -= quantidade;
@@ -490,12 +580,12 @@ function registrarMovimentacao() {
 
     movimentacoes.push({
         id: Date.now(),
-        unidadeId: usuarioLogado.unidadeId,
+        unidadeId: unidadeSelecionada.id,
         data: new Date().toLocaleString("pt-BR"),
         produto: produto.nome,
         codigo: produto.codigo,
-        tipo: tipo,
-        quantidade: quantidade,
+        tipo,
+        quantidade,
         observacao: observacao || "-",
         usuarioResponsavel: usuarioLogado.nome
     });
@@ -506,17 +596,16 @@ function registrarMovimentacao() {
     document.getElementById("observacaoMovimentacao").value = "";
 
     atualizarSistema();
-
-    alert(tipo === "entrada" ? "Entrada registrada com sucesso!" : "Saída registrada com sucesso!");
+    alert("Movimentação registrada com sucesso!");
 }
 
 function listarHistorico() {
-    if (!usuarioLogado) return;
+    if (!unidadeSelecionada) return;
 
     const tabela = document.getElementById("tabelaHistorico");
     tabela.innerHTML = "";
 
-    const historicoUnidade = movimentacoes.filter(m => m.unidadeId === usuarioLogado.unidadeId);
+    const historicoUnidade = movimentacoes.filter(m => m.unidadeId === unidadeSelecionada.id);
     const lista = [...historicoUnidade].reverse();
 
     lista.forEach(mov => {
@@ -539,13 +628,13 @@ function listarHistorico() {
 }
 
 function listarProdutosBaixos() {
-    if (!usuarioLogado) return;
+    if (!unidadeSelecionada) return;
 
     const tabela = document.getElementById("tabelaBaixo");
     tabela.innerHTML = "";
 
     const produtosBaixos = produtos.filter(
-        p => p.unidadeId === usuarioLogado.unidadeId && p.estoque <= p.minimo
+        p => p.unidadeId === unidadeSelecionada.id && p.estoque <= p.minimo
     );
 
     produtosBaixos.forEach(produto => {
@@ -566,10 +655,10 @@ function listarProdutosBaixos() {
 }
 
 function atualizarDashboard() {
-    if (!usuarioLogado) return;
+    if (!unidadeSelecionada) return;
 
-    const produtosUnidade = produtos.filter(p => p.unidadeId === usuarioLogado.unidadeId);
-    const movimentacoesUnidade = movimentacoes.filter(m => m.unidadeId === usuarioLogado.unidadeId);
+    const produtosUnidade = produtos.filter(p => p.unidadeId === unidadeSelecionada.id);
+    const movimentacoesUnidade = movimentacoes.filter(m => m.unidadeId === unidadeSelecionada.id);
 
     document.getElementById("totalProdutos").textContent = produtosUnidade.length;
     document.getElementById("totalEstoque").textContent = produtosUnidade.reduce((acc, p) => acc + p.estoque, 0);
@@ -580,10 +669,11 @@ function atualizarDashboard() {
 }
 
 function atualizarSistema() {
-    if (!usuarioLogado) return;
+    if (!usuarioLogado || !unidadeSelecionada) return;
 
     listarProdutos();
     listarHistorico();
+    listarUsuarios();
     atualizarSelectProdutos();
     atualizarDashboard();
 }
