@@ -73,7 +73,7 @@ function enviarEmailRecuperacao() {
     );
 
     if (conta) {
-        alert(`Instruções de redefinição de senha enviadas com sucesso para a conta de "${conta.nome}"!\n\n(Simulação: Verifique sua caixa de entrada).`);
+        alert(`Instruções de redefinição enviadas para o e-mail cadastrado de "${conta.nome}"!\n\n(Simulação: Verifique sua caixa de entrada).`);
     } else {
         alert("Se o e-mail/usuário estiver cadastrado no sistema, você receberá um link de redefinição em instantes.");
     }
@@ -142,13 +142,11 @@ function aplicarPermissoesInterface() {
     const containerImportarExcel = document.getElementById("containerImportarExcel");
     const thAcoesProdutos = document.getElementById("thAcoesProdutos");
 
-    // Contador de Pendências no Menu
     const badgeCount = document.getElementById("badgePendenciasCount");
     if (badgeCount) {
         badgeCount.textContent = pendencias.length;
     }
 
-    // TÉCNICO
     if (perfil === "tecnico") {
         if (navDashboard) navDashboard.style.display = "none";
         if (navPendencias) navPendencias.style.display = "none";
@@ -157,7 +155,6 @@ function aplicarPermissoesInterface() {
         if (containerImportarExcel) containerImportarExcel.style.display = "none";
         if (thAcoesProdutos) thAcoesProdutos.style.display = "none";
     } 
-    // SUPERVISOR
     else if (perfil === "supervisor") {
         if (navDashboard) navDashboard.style.display = "inline-block";
         if (navPendencias) navPendencias.style.display = "inline-block";
@@ -166,7 +163,6 @@ function aplicarPermissoesInterface() {
         if (containerImportarExcel) containerImportarExcel.style.display = "block";
         if (thAcoesProdutos) thAcoesProdutos.style.display = "table-cell";
     } 
-    // COORDENADOR E ADMIN
     else {
         if (navDashboard) navDashboard.style.display = "inline-block";
         if (navPendencias) navPendencias.style.display = "inline-block";
@@ -603,7 +599,7 @@ function listarPendencias() {
     tabela.innerHTML = "";
 
     if (pendencias.length === 0) {
-        tabela.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#64748b;">Nenhuma solicitação pendente no momento.</td></tr>`;
+        tabela.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#666;">Nenhuma solicitação pendente no momento.</td></tr>`;
         return;
     }
 
@@ -617,8 +613,8 @@ function listarPendencias() {
             <td><strong>${item.quantidade}</strong></td>
             <td>${item.observacao}</td>
             <td>
-                <button class="btn-principal" style="padding:4px 8px; font-size:12px;" onclick="aprovarPendencia(${index})">Aprovar</button>
-                <button class="btn-excluir" style="padding:4px 8px; font-size:12px;" onclick="recusarPendencia(${index})">Recusar</button>
+                <button class="btn-principal" style="padding:4px 10px; font-size:12px;" onclick="aprovarPendencia(${index})">Aprovar</button>
+                <button class="btn-excluir" style="padding:4px 10px; font-size:12px;" onclick="recusarPendencia(${index})">Recusar</button>
             </td>
         `;
         tabela.appendChild(linha);
