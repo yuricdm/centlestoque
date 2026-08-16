@@ -1,101 +1,201 @@
-/* ==========================================================================
-   1. RESET E VARIÁVEIS DE DESIGN
-   ========================================================================== */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
 }
 
-:root {
-  --sidebar-width: 260px; /* Largura suficiente para evitar quebras de texto */
-  --ml-yellow: #FFE600;
-  --ml-blue: #3483FA;
-  --ml-bg: #EDEDED;
-  --ml-surface: #FFFFFF;
-  --ml-text: #333333;
-  --ml-border: #E6E6E6;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: var(--ml-bg);
-  color: var(--ml-text);
+    background-color: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
 }
 
-/* ==========================================================================
-   2. FIXAÇÃO E LARGURA DA SIDEBAR
-   ========================================================================== */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: var(--sidebar-width);
-  height: 100vh;
-  background-color: var(--ml-surface);
-  border-right: 1px solid var(--ml-border);
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  z-index: 1000;
-  overflow: hidden;
+/* Toast Container */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-/* Cabeçalho da Sidebar */
+.toast {
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 500;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    animation: slideIn 0.3s ease;
+}
+
+.toast.sucesso { background-color: var(--success); }
+.toast.erro { background-color: var(--danger); }
+.toast.alerta { background-color: var(--warning); color: #000; }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Screen States */
+.screen { display: none; width: 100%; height: 100vh; }
+.screen.active { display: flex; }
+
+/* Login Screen */
+#login-screen {
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.login-card {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.login-card h2 { margin-bottom: 1.5rem; text-align: center; color: var(--primary); }
+
+/* Layout Main */
+#app-screen { display: flex; width: 100vw; }
+
+sidebar {
+    width: 260px;
+    background-color: #0f172a;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+}
+
 .sidebar-header {
-  height: 60px;
-  background-color: var(--ml-yellow);
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  font-weight: bold;
-  font-size: 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    border-bottom: 1px solid #334155;
+    color: #38bdf8;
 }
 
-/* ==========================================================================
-   3. ÁREA DE NAVEGAÇÃO E ROLAGEM VERTICAL
-   ========================================================================== */
-.sidebar-nav {
-  flex: 1;
-  padding: 12px 0;
-  overflow-y: auto; /* Permite rolar sem cortar conteúdo */
-  overflow-x: hidden;
+.nav-links { list-style: none; padding: 1rem 0; flex: 1; }
+
+.nav-links li a {
+    display: block;
+    padding: 0.75rem 1.5rem;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: all 0.2s;
 }
 
-/* Formatação das listas e links */
-.sidebar-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.nav-links li a:hover, .nav-links li a.active {
+    background-color: #1e293b;
+    color: #fff;
+    border-left: 4px solid var(--primary);
 }
 
-.sidebar-nav li {
-  width: 100%;
+.user-info {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #334155;
+    font-size: 0.875rem;
 }
 
-/* Impede que o texto quebre em várias linhas (causando o visual da imagem) */
-.sidebar-nav a {
-  display: block;
-  padding: 10px 20px;
-  color: var(--ml-text);
-  text-decoration: none;
-  font-size: 14px;
-  white-space: nowrap; /* Mantém cada link em uma única linha */
-  transition: background-color 0.2s, color 0.2s;
+main {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
 }
 
-.sidebar-nav a:hover {
-  background-color: #F5F5F5;
-  color: var(--ml-blue);
+/* Components */
+.card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 1.5rem;
 }
 
-/* ==========================================================================
-   4. EMPURRAR O CONTEÚDO PRINCIPAL (SOLUÇÃO DE SOBREPOSIÇÃO)
-   ========================================================================== */
-/* Aplique esta classe no elemento pai/container do resto da sua página */
-main, .main-content, .container-principal {
-  margin-left: var(--sidebar-width) !important; /* Move o conteúdo para o lado da barra */
-  padding: 24px;
-  min-height: 100vh;
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.625rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-secondary { background: #e2e8f0; color: #334155; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.875rem;
+}
+
+th { background-color: #f1f5f9; font-weight: 600; }
+
+.actions { display: flex; gap: 0.5rem; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #e2e8f0;
 }
