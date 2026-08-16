@@ -24,7 +24,7 @@ function sanitizar(str) {
 }
 
 function extrair6DigitosCPF(cpf) {
-    const limpo = cpf.replace(/\D/g, '');
+    const limpo = (cpf || '').replace(/\D/g, '');
     return limpo.slice(0, 6);
 }
 
@@ -75,8 +75,32 @@ function processarRecuperacaoSenha(e) {
 }
 
 // ==========================================================================
-// 2. SIDEBAR, TOAST E MODAL
+// 2. SISTEMA DE NAVEGAÇÃO DE TELAS (SPA)
 // ==========================================================================
+
+function navegarPara(idSecaoTarget) {
+    const secoes = document.querySelectorAll('.app-section');
+    secoes.forEach(sec => sec.classList.add('oculto'));
+
+    const alvo = document.getElementById(idSecaoTarget);
+    if (alvo) {
+        alvo.classList.remove('oculto');
+    }
+
+    const links = document.querySelectorAll('.nav-link');
+    links.forEach(link => {
+        if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(idSecaoTarget)) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+
+    const sidebar = document.getElementById("sidebar");
+    if (window.innerWidth <= 768 && !sidebar.classList.contains("fechada")) {
+        alternarSidebar();
+    }
+}
 
 function alternarSidebar() {
     const sidebar = document.getElementById("sidebar");
@@ -161,7 +185,7 @@ const USUARIOS_PADRAO = [
         senhaHash: HASH_1234_SHA, 
         senhaB64: HASH_1234_B64, 
         cargoId: "admin", 
-        unidadeId: "SRS1" 
+        unidadesIds: ["SRS1", "PEL1"]
     }
 ];
 
@@ -170,6 +194,14 @@ let cargos = JSON.parse(localStorage.getItem("cargos")) || CARGOS_PADRAO;
 let usuarios = JSON.parse(localStorage.getItem("usuarios")) || USUARIOS_PADRAO;
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
+
+// MIGRAÇÃO CASO HOUVESSE DADOS ANTIGOS (COM APENAS unidadeId)
+usuarios = usuarios.map(u => {
+    if (!u.unidadesIds) {
+        u.unidadesIds = u.unidadeId ? [u.unidadeId] : [unidades[0].id];
+    }
+    return u;
+});
 
 let usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado")) || null;
 let unidadeSelecionada = JSON.parse(sessionStorage.getItem("unidadeSelecionada")) || unidades[0];
@@ -209,7 +241,8 @@ async function realizarLogin(e) {
         usuarioLogado = conta;
         sessionStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
 
-        unidadeSelecionada = unidades.find(u => u.id === conta.unidadeId) || unidades[0];
+        const unidadesPermitidas = unidades.filter(u => conta.unidadesIds.includes(u.id));
+        unidadeSelecionada = unidadesPermitidas[0] || unidades[0];
         sessionStorage.setItem("unidadeSelecionada", JSON.stringify(unidadeSelecionada));
 
         exibirToast(`Bem-vindo, ${sanitizar(conta.nome)}!`, "sucesso");
@@ -226,6 +259,7 @@ function iniciarSessao() {
 
     carregarSelectsGerais();
     atualizarInterface();
+    navegarPara('dashSection');
 }
 
 function encerrarSessao() {
@@ -236,7 +270,12 @@ function encerrarSessao() {
 function carregarSelectsGerais() {
     const selectUnidadeMain = document.getElementById("unidadeSelect");
     selectUnidadeMain.innerHTML = "";
-    unidades.forEach(u => {
+
+    const unidadesPermitidas = unidades.filter(u => 
+        usuarioLogado && usuarioLogado.unidadesIds ? usuarioLogado.unidadesIds.includes(u.id) : true
+    );
+
+    unidadesPermitidas.forEach(u => {
         const opt = document.createElement("option");
         opt.value = u.id;
         opt.textContent = u.nome;
@@ -253,13 +292,12 @@ function carregarSelectsGerais() {
         selectCargoUsr.appendChild(opt);
     });
 
-    const selectUnidadeUsr = document.getElementById("usrUnidade");
-    selectUnidadeUsr.innerHTML = "";
+    const containerUnidadesUsr = document.getElementById("usrUnidadesContainer");
+    containerUnidadesUsr.innerHTML = "";
     unidades.forEach(u => {
-        const opt = document.createElement("option");
-        opt.value = u.id;
-        opt.textContent = u.nome;
-        selectUnidadeUsr.appendChild(opt);
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="checkbox" name="usrUnidadesCheck" value="${u.id}"> ${sanitizar(u.nome)}`;
+        containerUnidadesUsr.appendChild(label);
     });
 }
 
@@ -274,18 +312,26 @@ function trocarUnidade(idUnidade) {
 }
 
 // ==========================================================================
-// 5. MÓDULO DE ADMINISTRAÇÃO
+// 5. MÓDULO DE ADMINISTRAÇÃO E GESTÃO DE USUÁRIOS
 // ==========================================================================
 
-async function cadastrarUsuario(e) {
+async function salvarUsuario(e) {
     e.preventDefault();
 
+    const editingMatricula = document.getElementById("usrEditingMatricula").value;
     const nome = document.getElementById("usrNomeCompleto").value.trim();
     const cpf = document.getElementById("usrCpf").value.trim();
     const email = document.getElementById("usrEmail").value.trim();
     const senha = document.getElementById("usrSenha").value.trim();
     const cargoId = document.getElementById("usrCargo").value;
-    const unidadeId = document.getElementById("usrUnidade").value;
+
+    const checkboxes = document.querySelectorAll('input[name="usrUnidadesCheck"]:checked');
+    const unidadesIds = Array.from(checkboxes).map(cb => cb.value);
+
+    if (unidadesIds.length === 0) {
+        exibirToast("Selecione ao menos uma unidade para o usuário.", "alerta");
+        return;
+    }
 
     const matricula = extrair6DigitosCPF(cpf);
 
@@ -294,49 +340,88 @@ async function cadastrarUsuario(e) {
         return;
     }
 
-    if (usuarios.some(u => u.matricula === matricula)) {
-        exibirToast("Já existe um usuário com esta matrícula (CPF).", "alerta");
-        return;
+    if (editingMatricula) {
+        const usrIndex = usuarios.findIndex(u => u.matricula === editingMatricula);
+        if (usrIndex !== -1) {
+            usuarios[usrIndex].nome = nome;
+            usuarios[usrIndex].cpf = cpf;
+            usuarios[usrIndex].email = email;
+            usuarios[usrIndex].cargoId = cargoId;
+            usuarios[usrIndex].unidadesIds = unidadesIds;
+
+            if (senha) {
+                usuarios[usrIndex].senhaHash = await gerarHashSenha(senha);
+                usuarios[usrIndex].senhaB64 = btoa(senha);
+            }
+
+            salvarTudo();
+            exibirToast("Usuário atualizado com sucesso!", "sucesso");
+            cancelarEdicaoUsuario();
+            atualizarInterface();
+        }
+    } else {
+        if (usuarios.some(u => u.matricula === matricula)) {
+            exibirToast("Já existe um usuário com esta matrícula (CPF).", "alerta");
+            return;
+        }
+
+        if (!senha) {
+            exibirToast("Informe uma senha para o novo usuário.", "alerta");
+            return;
+        }
+
+        const senhaHash = await gerarHashSenha(senha);
+
+        usuarios.push({
+            matricula,
+            cpf,
+            nome,
+            email,
+            senhaHash,
+            senhaB64: btoa(senha),
+            cargoId,
+            unidadesIds
+        });
+
+        salvarTudo();
+        document.getElementById("usuarioForm").reset();
+        document.getElementById("usrMatricula").value = "";
+        exibirToast("Usuário cadastrado com sucesso!", "sucesso");
+        atualizarInterface();
     }
-
-    const senhaHash = await gerarHashSenha(senha);
-
-    usuarios.push({
-        matricula,
-        cpf,
-        nome,
-        email,
-        senhaHash,
-        senhaB64: btoa(senha),
-        cargoId,
-        unidadeId
-    });
-
-    salvarTudo();
-    document.getElementById("usuarioForm").reset();
-    document.getElementById("usrMatricula").value = "";
-    exibirToast("Usuário cadastrado com sucesso!", "sucesso");
-    atualizarInterface();
 }
 
-async function trocarSenhaUsuario(matricula) {
-    const novaSenha = await exibirModal({
-        titulo: "Alterar Senha",
-        mensagem: "Digite a nova senha para o usuário:",
-        comInput: true,
-        inputLabel: "Nova Senha:",
-        inputType: "password"
+function prepararEdicaoUsuario(matricula) {
+    const usr = usuarios.find(u => u.matricula === matricula);
+    if (!usr) return;
+
+    document.getElementById("usrEditingMatricula").value = usr.matricula;
+    document.getElementById("usrNomeCompleto").value = usr.nome;
+    document.getElementById("usrCpf").value = usr.cpf;
+    document.getElementById("usrMatricula").value = usr.matricula;
+    document.getElementById("usrEmail").value = usr.email;
+    document.getElementById("usrSenha").value = "";
+    document.getElementById("usrCargo").value = usr.cargoId;
+
+    const checkboxes = document.querySelectorAll('input[name="usrUnidadesCheck"]');
+    checkboxes.forEach(cb => {
+        cb.checked = usr.unidadesIds ? usr.unidadesIds.includes(cb.value) : false;
     });
 
-    if (novaSenha && novaSenha.trim() !== "") {
-        const usr = usuarios.find(u => u.matricula === matricula);
-        if (usr) {
-            usr.senhaHash = await gerarHashSenha(novaSenha.trim());
-            usr.senhaB64 = btoa(novaSenha.trim());
-            salvarTudo();
-            exibirToast("Senha alterada com sucesso!", "sucesso");
-        }
-    }
+    document.getElementById("usrFormTitulo").textContent = `Editar Usuário (${usr.nome})`;
+    document.getElementById("usrBtnSubmit").textContent = "Salvar Alterações";
+    document.getElementById("usrBtnCancelar").classList.remove("oculto");
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelarEdicaoUsuario() {
+    document.getElementById("usrEditingMatricula").value = "";
+    document.getElementById("usuarioForm").reset();
+    document.getElementById("usrMatricula").value = "";
+    document.getElementById("usrFormTitulo").textContent = "Cadastrar Novo Usuário";
+    document.getElementById("usrBtnSubmit").textContent = "Cadastrar Usuário";
+    document.getElementById("usrBtnCancelar").classList.add("oculto");
 }
 
 function removerUsuario(matricula) {
@@ -450,6 +535,7 @@ function cadastrarProduto(e) {
     document.getElementById("produtoForm").reset();
     exibirToast("Produto cadastrado!", "sucesso");
     atualizarInterface();
+    navegarPara('produtosSection');
 }
 
 async function movimentarEstoque(id, tipo) {
@@ -513,18 +599,12 @@ function atualizarInterface() {
         document.getElementById("usuarioCargoLogado").textContent = cargoAtual.nome;
     }
 
-    const adminSections = [
-        document.getElementById("usuariosSection"),
-        document.getElementById("cargosSection"),
-        document.getElementById("unidadesSection")
-    ];
-    adminSections.forEach(sec => {
-        if (cargoAtual.permGerenciarAdmin) {
-            sec.classList.remove("oculto");
-        } else {
-            sec.classList.add("oculto");
-        }
-    });
+    const navAdminGroup = document.getElementById("navAdminGroup");
+    if (cargoAtual.permGerenciarAdmin) {
+        navAdminGroup.classList.remove("oculto");
+    } else {
+        navAdminGroup.classList.add("oculto");
+    }
 
     const produtosUnidade = produtos.filter(p => p.unidadeId === unidadeSelecionada.id);
     const movimentacoesUnidade = movimentacoes.filter(m => m.unidadeId === unidadeSelecionada.id);
@@ -563,7 +643,7 @@ function atualizarInterface() {
     if (movimentacoesUnidade.length === 0) {
         tbodyHist.innerHTML = `<tr><td colspan="5" class="text-center">Nenhuma movimentação registrada nesta unidade.</td></tr>`;
     } else {
-        movimentacoesUnidade.slice(0, 10).forEach(m => {
+        movimentacoesUnidade.slice(0, 15).forEach(m => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${m.data}</td>
@@ -580,7 +660,12 @@ function atualizarInterface() {
     tbodyUsr.innerHTML = "";
     usuarios.forEach(u => {
         const cNome = (cargos.find(c => c.id === u.cargoId) || {}).nome || u.cargoId;
-        const uNome = (unidades.find(un => un.id === u.unidadeId) || {}).nome || u.unidadeId;
+        
+        const unidadesDoUsuario = (u.unidadesIds || []).map(uId => {
+            const un = unidades.find(x => x.id === uId);
+            return un ? `<span class="badge badge-unit">${sanitizar(un.id)}</span>` : '';
+        }).join(" ");
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td><strong>${u.matricula}</strong></td>
@@ -588,9 +673,9 @@ function atualizarInterface() {
             <td>${sanitizar(u.cpf)}</td>
             <td>${sanitizar(u.email)}</td>
             <td>${sanitizar(cNome)}</td>
-            <td>${sanitizar(uNome)}</td>
+            <td>${unidadesDoUsuario || '-'}</td>
             <td>
-                <button class="btn-secondary btn-action" onclick="trocarSenhaUsuario('${u.matricula}')">Senha</button>
+                <button class="btn-primary btn-action" onclick="prepararEdicaoUsuario('${u.matricula}')">Editar</button>
                 <button class="btn-danger btn-action" onclick="removerUsuario('${u.matricula}')">&times;</button>
             </td>
         `;
@@ -640,7 +725,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("loginForm").addEventListener("submit", realizarLogin);
     document.getElementById("recuperarSenhaForm").addEventListener("submit", processarRecuperacaoSenha);
     document.getElementById("produtoForm").addEventListener("submit", cadastrarProduto);
-    document.getElementById("usuarioForm").addEventListener("submit", cadastrarUsuario);
+    document.getElementById("usuarioForm").addEventListener("submit", salvarUsuario);
     document.getElementById("cargoForm").addEventListener("submit", cadastrarCargo);
     document.getElementById("unidadeForm").addEventListener("submit", cadastrarUnidade);
 
