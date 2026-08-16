@@ -30,7 +30,23 @@ function resetarDadosSistema() {
 }
 
 // ==========================================================================
-// 2. NOTIFICAÇÕES E MODAL
+// 2. SIDEBAR E NAVEGAÇÃO
+// ==========================================================================
+
+function alternarSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const icon = document.getElementById("iconSidebar");
+    sidebar.classList.toggle("fechada");
+
+    if (sidebar.classList.contains("fechada")) {
+        icon.innerHTML = "&#x2630;"; // Ícone de Hambúrguer
+    } else {
+        icon.innerHTML = "&times;"; // Ícone de Fechar
+    }
+}
+
+// ==========================================================================
+// 3. TOAST E MODAL
 // ==========================================================================
 
 function exibirToast(mensagem, tipo = 'info') {
@@ -85,10 +101,15 @@ function fecharModal(confirmado) {
 }
 
 // ==========================================================================
-// 3. BANCO DE DADOS LOCAL E ESTADOS
+// 4. ESTADOS E DADOS LOCAIS
 // ==========================================================================
 
-const UNIDADES_PADRAO = [{ id: "SRS1", nome: "SRS1 PORTO ALEGRE - RS" }];
+const UNIDADES_PADRAO = [
+    { id: "SRS1", nome: "SRS1 PORTO ALEGRE - RS" },
+    { id: "PEL1", nome: "PEL1 PELOTAS - RS" },
+    { id: "CXI1", nome: "CXI1 CAXIAS DO SUL - RS" }
+];
+
 const HASH_1234_SHA = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
 const HASH_1234_B64 = "MTIzNA==";
 
@@ -102,7 +123,7 @@ let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
 
 let usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado")) || null;
-let unidadeSelecionada = JSON.parse(sessionStorage.getItem("unidadeSelecionada")) || null;
+let unidadeSelecionada = JSON.parse(sessionStorage.getItem("unidadeSelecionada")) || unidades[0];
 
 function salvarTudo() {
     localStorage.setItem("produtos", JSON.stringify(produtos));
@@ -110,7 +131,7 @@ function salvarTudo() {
 }
 
 // ==========================================================================
-// 4. AUTENTICAÇÃO E TRANSIÇÃO DE TELA
+// 5. AUTENTICAÇÃO E TROCA DE UNIDADE
 // ==========================================================================
 
 async function realizarLogin(e) {
@@ -147,13 +168,10 @@ async function realizarLogin(e) {
 }
 
 function iniciarSessao() {
-    // Esconde a tela de login e exibe a tela do app
-    const loginArea = document.getElementById("loginArea");
-    const mainArea = document.getElementById("mainArea");
+    document.getElementById("loginArea").classList.add("oculto");
+    document.getElementById("mainArea").classList.remove("oculto");
 
-    if (loginArea) loginArea.classList.add("oculto");
-    if (mainArea) mainArea.classList.remove("oculto");
-
+    carregarOpcoesUnidades();
     atualizarInterface();
 }
 
@@ -162,8 +180,33 @@ function encerrarSessao() {
     location.reload();
 }
 
+function carregarOpcoesUnidades() {
+    const select = document.getElementById("unidadeSelect");
+    select.innerHTML = "";
+
+    unidades.forEach(u => {
+        const opt = document.createElement("option");
+        opt.value = u.id;
+        opt.textContent = u.nome;
+        if (unidadeSelecionada && u.id === unidadeSelecionada.id) {
+            opt.selected = true;
+        }
+        select.appendChild(opt);
+    });
+}
+
+function trocarUnidade(idUnidade) {
+    const selecionada = unidades.find(u => u.id === idUnidade);
+    if (selecionada) {
+        unidadeSelecionada = selecionada;
+        sessionStorage.setItem("unidadeSelecionada", JSON.stringify(unidadeSelecionada));
+        exibirToast(`Unidade alterada para: ${selecionada.nome}`, "info");
+        atualizarInterface();
+    }
+}
+
 // ==========================================================================
-// 5. PRODUTOS E MOVIMENTAÇÕES
+// 6. GERENCIAMENTO DE ESTOQUE
 // ==========================================================================
 
 function cadastrarProduto(e) {
@@ -176,6 +219,7 @@ function cadastrarProduto(e) {
 
     const novoProduto = {
         id: Date.now(),
+        unidadeId: unidadeSelecionada.id,
         nome,
         categoria,
         quantidade,
@@ -186,6 +230,7 @@ function cadastrarProduto(e) {
 
     movimentacoes.unshift({
         data: new Date().toLocaleString("pt-BR"),
+        unidadeId: unidadeSelecionada.id,
         produto: nome,
         tipo: "Criação",
         quantidade: quantidade,
@@ -220,6 +265,7 @@ async function movimentarEstoque(id, tipo) {
 
     movimentacoes.unshift({
         data: new Date().toLocaleString("pt-BR"),
+        unidadeId: unidadeSelecionada.id,
         produto: produto.nome,
         tipo,
         quantidade: qtd,
@@ -246,16 +292,19 @@ async function removerProduto(id) {
 }
 
 // ==========================================================================
-// 6. RENDERIZAÇÃO
+// 7. RENDERIZAÇÃO
 // ==========================================================================
 
 function atualizarInterface() {
     if (usuarioLogado) document.getElementById("usuarioNomeLogado").textContent = usuarioLogado.nome;
-    if (unidadeSelecionada) document.getElementById("unidadeNomeAtual").textContent = unidadeSelecionada.nome;
 
-    const totalItens = produtos.length;
-    const itensAlerta = produtos.filter(p => p.quantidade <= p.minimo).length;
-    const totalEstoque = produtos.reduce((acc, p) => acc + p.quantidade, 0);
+    // Filtra produtos e movimentações por unidade ativa
+    const produtosUnidade = produtos.filter(p => p.unidadeId === unidadeSelecionada.id);
+    const movimentacoesUnidade = movimentacoes.filter(m => m.unidadeId === unidadeSelecionada.id);
+
+    const totalItens = produtosUnidade.length;
+    const itensAlerta = produtosUnidade.filter(p => p.quantidade <= p.minimo).length;
+    const totalEstoque = produtosUnidade.reduce((acc, p) => acc + p.quantidade, 0);
 
     document.getElementById("statTotalProdutos").textContent = totalItens;
     document.getElementById("statItensAlerta").textContent = itensAlerta;
@@ -264,10 +313,10 @@ function atualizarInterface() {
     const tbodyProd = document.getElementById("tabelaProdutosBody");
     tbodyProd.innerHTML = "";
 
-    if (produtos.length === 0) {
-        tbodyProd.innerHTML = `<tr><td colspan="7" class="text-center">Nenhum produto cadastrado.</td></tr>`;
+    if (produtosUnidade.length === 0) {
+        tbodyProd.innerHTML = `<tr><td colspan="7" class="text-center">Nenhum produto cadastrado nesta unidade.</td></tr>`;
     } else {
-        produtos.forEach(p => {
+        produtosUnidade.forEach(p => {
             const emAlerta = p.quantidade <= p.minimo;
             const tr = document.createElement("tr");
             tr.innerHTML = `
@@ -290,10 +339,10 @@ function atualizarInterface() {
     const tbodyHist = document.getElementById("tabelaHistoricoBody");
     tbodyHist.innerHTML = "";
 
-    if (movimentacoes.length === 0) {
-        tbodyHist.innerHTML = `<tr><td colspan="5" class="text-center">Nenhuma movimentação registrada.</td></tr>`;
+    if (movimentacoesUnidade.length === 0) {
+        tbodyHist.innerHTML = `<tr><td colspan="5" class="text-center">Nenhuma movimentação registrada nesta unidade.</td></tr>`;
     } else {
-        movimentacoes.slice(0, 10).forEach(m => {
+        movimentacoesUnidade.slice(0, 10).forEach(m => {
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${m.data}</td>
@@ -308,7 +357,7 @@ function atualizarInterface() {
 }
 
 // ==========================================================================
-// 7. INICIALIZAÇÃO
+// 8. INICIALIZAÇÃO
 // ==========================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
