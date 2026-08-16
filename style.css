@@ -11,6 +11,7 @@ body {
     min-height: 100vh;
 }
 
+/* REGRA CRÍTICA PARA ALTERNÂNCIA DE TELAS */
 .oculto {
     display: none !important;
 }
