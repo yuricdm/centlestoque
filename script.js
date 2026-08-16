@@ -1,8 +1,8 @@
 // ==========================================================================
-// 1. SEGURANÇA & UTILITÁRIOS (COM FALLBACK DE CRIPTOGRAFIA E SANITIZAÇÃO)
+// 1. SEGURANÇA & UTILITÁRIOS (HASH COMPATÍVEL E SANITIZAÇÃO)
 // ==========================================================================
 
-// Hash compatível que roda em qualquer ambiente (mesmo abrindo arquivo direto)
+// Hash SHA-256 com Fallback Base64 (roda em localhost, HTTPS ou file://)
 async function gerarHashSenha(senha) {
     if (window.crypto && crypto.subtle) {
         try {
@@ -12,10 +12,9 @@ async function gerarHashSenha(senha) {
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         } catch (e) {
-            console.warn("SubtleCrypto indisponível, usando fallback.");
+            console.warn("SubtleCrypto indisponível no ambiente local. Usando fallback.");
         }
     }
-    // Fallback básico para ambiente sem HTTPS
     return btoa(senha);
 }
 
@@ -25,7 +24,7 @@ function sanitizar(string) {
     return temp.innerHTML;
 }
 
-// Reset de fábrica direto no console ou via código se der erro de login
+// Reset rápido para resolver conflitos de dados antigos no localStorage
 function resetarDadosSistema() {
     localStorage.clear();
     sessionStorage.clear();
@@ -53,30 +52,39 @@ function exibirModal({ titulo, mensagem, comInput = false, inputLabel = "" }) {
     return new Promise((resolve) => {
         resolverModal = resolve;
 
-        document.getElementById("modalTitulo").textContent = titulo;
-        document.getElementById("modalMensagem").textContent = mensagem;
+        const elTitulo = document.getElementById("modalTitulo");
+        const elMensagem = document.getElementById("modalMensagem");
+        if (elTitulo) elTitulo.textContent = titulo;
+        if (elMensagem) elMensagem.textContent = mensagem;
 
         const inputContainer = document.getElementById("modalInputContainer");
         const inputField = document.getElementById("modalInput");
 
-        if (comInput) {
-            inputContainer.classList.remove("oculto");
-            document.getElementById("modalInputLabel").textContent = inputLabel;
-            inputField.value = "";
-        } else {
-            inputContainer.classList.add("oculto");
+        if (inputContainer && inputField) {
+            if (comInput) {
+                inputContainer.classList.remove("oculto");
+                const label = document.getElementById("modalInputLabel");
+                if (label) label.textContent = inputLabel;
+                inputField.value = "";
+            } else {
+                inputContainer.classList.add("oculto");
+            }
         }
 
-        document.getElementById("modalCustom").classList.remove("oculto");
+        const modal = document.getElementById("modalCustom");
+        if (modal) modal.classList.remove("oculto");
     });
 }
 
 function fecharModal(confirmado) {
-    document.getElementById("modalCustom").classList.add("oculto");
+    const modal = document.getElementById("modalCustom");
+    if (modal) modal.classList.add("oculto");
 
     if (resolverModal) {
-        const comInput = !document.getElementById("modalInputContainer").classList.contains("oculto");
-        const valorInput = document.getElementById("modalInput").value.trim();
+        const inputContainer = document.getElementById("modalInputContainer");
+        const comInput = inputContainer && !inputContainer.classList.contains("oculto");
+        const inputField = document.getElementById("modalInput");
+        const valorInput = inputField ? inputField.value.trim() : "";
 
         if (comInput) {
             resolverModal(confirmado ? valorInput : null);
@@ -121,7 +129,7 @@ const CARGOS_PADRAO = [
     }
 ];
 
-// Hash SHA-256 e Fallback Base64 da senha "1234"
+// Hash SHA-256 e Base64 da senha "1234"
 const HASH_1234_SHA = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
 const HASH_1234_B64 = "MTIzNA==";
 
@@ -139,21 +147,24 @@ let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
 let pendencias = JSON.parse(localStorage.getItem("pendencias")) || [];
 
-// ESTADOS DE PAGINAÇÃO E CONTROLE
-let paginaProdutosAtual = 1;
-let paginaHistoricoAtual = 1;
-const ITENS_POR_PAGINA = 8;
-
+// ESTADOS DA SESSÃO
 let usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado")) || null;
 let unidadeSelecionada = JSON.parse(sessionStorage.getItem("unidadeSelecionada")) || null;
 
 // ==========================================================================
-// 4. AUTENTICAÇÃO FLEXÍVEL
+// 4. AUTENTICAÇÃO E CONTROLE DE TELA
 // ==========================================================================
 
-async function realizarLogin() {
-    const usuarioVal = document.getElementById("usuarioInput").value.trim().toLowerCase();
-    const senhaVal = document.getElementById("senhaInput").value.trim();
+async function realizarLogin(e) {
+    if (e && e.preventDefault) e.preventDefault(); // Impede o reload da página pelo formulário
+
+    const usuarioInput = document.getElementById("usuarioInput");
+    const senhaInput = document.getElementById("senhaInput");
+
+    if (!usuarioInput || !senhaInput) return;
+
+    const usuarioVal = usuarioInput.value.trim().toLowerCase();
+    const senhaVal = senhaInput.value.trim();
 
     if (!usuarioVal || !senhaVal) {
         exibirToast("Informe seu usuário e senha.", "alerta");
@@ -163,7 +174,7 @@ async function realizarLogin() {
     const hashForm = await gerarHashSenha(senhaVal);
     const b64Form = btoa(senhaVal);
 
-    // Aceita SHA-256, Base64 ou comparação direta de texto simples (para contas legadas)
+    // Valida com compatibilidade para senhas salvas em SHA-256, Base64 ou Texto Puro
     const conta = usuarios.find(u => 
         u.login.toLowerCase() === usuarioVal && 
         (u.senhaHash === hashForm || u.senhaB64 === b64Form || u.senha === senhaVal || u.senhaHash === HASH_1234_SHA)
@@ -178,6 +189,7 @@ async function realizarLogin() {
             : unidades[0];
 
         sessionStorage.setItem("unidadeSelecionada", JSON.stringify(unidadeSelecionada));
+        
         exibirToast(`Bem-vindo, ${sanitizar(conta.nome)}!`, "sucesso");
         iniciarSessao();
     } else {
@@ -187,3 +199,67 @@ async function realizarLogin() {
         });
     }
 }
+
+function iniciarSessao() {
+    // 1. Oculta a área/container de Login
+    const loginArea = document.getElementById("loginArea") || document.getElementById("loginContainer");
+    if (loginArea) loginArea.classList.add("oculto");
+
+    // 2. Exibe a área principal da aplicação
+    const mainArea = document.getElementById("mainArea") || document.getElementById("appContainer");
+    if (mainArea) mainArea.classList.remove("oculto");
+
+    // 3. Atualiza os dados exibidos no topo/dashboard
+    atualizarInterface();
+}
+
+function encerrarSessao() {
+    sessionStorage.removeItem("usuarioLogado");
+    sessionStorage.removeItem("unidadeSelecionada");
+    usuarioLogado = null;
+    unidadeSelecionada = null;
+    
+    // Recarrega a página para voltar ao estado de login zerado
+    location.reload();
+}
+
+function atualizarInterface() {
+    // Atualiza nome do usuário logado no topo
+    const elUsuario = document.getElementById("usuarioNomeLogado") || document.getElementById("nomeUsuario");
+    if (elUsuario && usuarioLogado) {
+        elUsuario.textContent = usuarioLogado.nome;
+    }
+
+    // Atualiza nome da unidade selecionada
+    const elUnidade = document.getElementById("unidadeNomeAtual") || document.getElementById("nomeUnidade");
+    if (elUnidade && unidadeSelecionada) {
+        elUnidade.textContent = unidadeSelecionada.nome;
+    }
+
+    // Se houver funções adicionais de renderizar tabelas, chama-as aqui se existirem
+    if (typeof renderizarProdutos === "function") renderizarProdutos();
+    if (typeof renderizarDashboard === "function") renderizarDashboard();
+}
+
+// ==========================================================================
+// 5. INICIALIZAÇÃO E EVENT LISTENERS DO SISTEMA
+// ==========================================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Liga o formulário de login ao submit para evitar reload
+    const formLogin = document.getElementById("loginForm") || document.querySelector("form");
+    if (formLogin) {
+        formLogin.addEventListener("submit", realizarLogin);
+    }
+
+    // Liga o botão de entrar se existir separado
+    const btnLogin = document.getElementById("btnLogin") || document.getElementById("btnEntrar");
+    if (btnLogin) {
+        btnLogin.addEventListener("click", realizarLogin);
+    }
+
+    // Se já estiver logado na sessão ativa, carrega direto a interface principal
+    if (usuarioLogado) {
+        iniciarSessao();
+    }
+});
