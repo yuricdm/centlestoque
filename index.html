@@ -12,32 +12,39 @@
 
     <header>
         <div class="header-container">
-            <div class="logo">
-                <span class="logo-icone">📦</span>
-                <span class="logo-texto">Estoque<strong>ML</strong></span>
+            <div class="logo-area">
+                <button id="btnToggleSidebar" class="btn-sidebar-toggle oculto" onclick="toggleSidebar()">☰</button>
+                <div class="logo">
+                    <span class="logo-icone">📦</span>
+                    <span class="logo-texto">Estoque<strong>ML</strong></span>
+                </div>
             </div>
 
             <div id="infoUsuarioHeader" class="info-usuario oculto">
                 <span id="nomeUnidadeAtual"></span>
             </div>
-
-            <nav id="menuNavegacao" class="oculto">
-                <button id="navUnidades" class="btn-trocar-unidade" onclick="voltarParaSelecaoUnidades()">Unidades</button>
-                <button id="navDashboard" onclick="mostrarPagina('dashboard')">Dashboard</button>
-                <button id="navProdutos" onclick="mostrarPagina('produtos')">Produtos</button>
-                <button id="navMovimentacao" onclick="mostrarPagina('movimentacao')">Movimentação</button>
-                <button id="navPendencias" class="btn-destaque-menu" onclick="mostrarPagina('pendencias')">
-                    Pendências <span id="badgePendenciasCount" class="badge-count">0</span>
-                </button>
-                <button id="navHistorico" onclick="mostrarPagina('historico')">Histórico</button>
-                <button id="navCargos" onclick="mostrarPagina('cargos')">Cargos & Permissões</button>
-                <button id="navUsuarios" onclick="mostrarPagina('usuarios')">Gestão</button>
-                <button class="btn-sair" onclick="realizarLogout()">Sair</button>
-            </nav>
         </div>
     </header>
 
-    <main>
+    <!-- MENU LATERAL (SIDEBAR) -->
+    <aside id="sidebarNav" class="sidebar oculto">
+        <button class="btn-fechar-sidebar" onclick="toggleSidebar()">✕</button>
+        <nav id="menuNavegacao">
+            <button id="navDashboard" onclick="navegarEFechar('dashboard')">Dashboard</button>
+            <button id="navProdutos" onclick="navegarEFechar('produtos')">Produtos</button>
+            <button id="navMovimentacao" onclick="navegarEFechar('movimentacao')">Movimentação</button>
+            <button id="navPendencias" class="btn-destaque-menu" onclick="navegarEFechar('pendencias')">
+                Pendências <span id="badgePendenciasCount" class="badge-count">0</span>
+            </button>
+            <button id="navHistorico" onclick="navegarEFechar('historico')">Histórico</button>
+            <button id="navCargos" onclick="navegarEFechar('cargos')">Cargos & Permissões</button>
+            <button id="navUsuarios" onclick="navegarEFechar('usuarios')">Gestão</button>
+            <button id="navUnidades" class="btn-trocar-unidade" onclick="navegarEFechar('selecaoUnidade')">Trocar Unidade</button>
+            <button class="btn-sair" onclick="realizarLogout()">Sair</button>
+        </nav>
+    </aside>
+
+    <main class="main-content">
 
         <!-- 1. LOGIN -->
         <section id="login" class="pagina">
@@ -312,7 +319,7 @@
             </div>
         </section>
 
-        <!-- 8. CARGOS & PERMISSÕES (NOVO) -->
+        <!-- 8. CARGOS & PERMISSÕES -->
         <section id="cargos" class="pagina oculto">
             <h1>Gestão de Cargos e Permissões</h1>
 
@@ -408,16 +415,12 @@
 
                 <div>
                     <label>Cargo / Perfil de Acesso</label>
-                    <select id="novoPerfilUsuario">
-                        <!-- Preenchido dinamicamente via JS -->
-                    </select>
+                    <select id="novoPerfilUsuario"></select>
                 </div>
 
                 <div>
                     <label>Unidade de Acesso</label>
-                    <select id="novaUnidadeUsuario">
-                        <!-- Preenchido dinamicamente via JS -->
-                    </select>
+                    <select id="novaUnidadeUsuario"></select>
                 </div>
 
                 <div class="acoes-formulario">
