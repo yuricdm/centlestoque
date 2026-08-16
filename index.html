@@ -5,10 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão de Estoque</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Bibliotecas Externas (Excel, PDF) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body>
+
+    <!-- SISTERMA DE TOAST NOTIFICATIONS -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- MODAL CUSTOMIZADO (SUBSTITUI ALERT / CONFIRM / PROMPT) -->
+    <div id="modalCustom" class="modal-overlay oculto">
+        <div class="modal-card">
+            <h3 id="modalTitulo">Atenção</h3>
+            <p id="modalMensagem">Mensagem do sistema...</p>
+            
+            <div id="modalInputContainer" class="modal-input-container oculto">
+                <label id="modalInputLabel" for="modalInput">Motivo:</label>
+                <input type="text" id="modalInput" placeholder="Digite aqui...">
+            </div>
+
+            <div class="modal-acoes">
+                <button id="btnModalCancelar" class="btn-cancelar" onclick="fecharModal(false)">Cancelar</button>
+                <button id="btnModalConfirmar" class="btn-principal" onclick="fecharModal(true)">Confirmar</button>
+            </div>
+        </div>
+    </div>
 
     <header>
         <div class="header-container">
@@ -105,7 +129,6 @@
             <div class="container-unidades">
                 <h2>Unidades Operacionais</h2>
                 <p>Selecione a unidade de trabalho para prosseguir</p>
-
                 <div id="gridUnidades" class="grid-unidades"></div>
             </div>
         </section>
@@ -223,6 +246,7 @@
                     </thead>
                     <tbody id="tabelaProdutos"></tbody>
                 </table>
+                <div class="paginacao-container" id="paginacaoProdutos"></div>
             </div>
         </section>
 
@@ -292,15 +316,33 @@
             </div>
         </section>
 
-        <!-- 7. HISTÓRICO -->
+        <!-- 7. HISTÓRICO DA UNIDADE -->
         <section id="historico" class="pagina oculto">
             <h1>Histórico de Movimentações <span class="badge-unidade"></span></h1>
 
             <div class="painel">
-                <div class="acoes-excel" style="margin-bottom: 16px;">
-                    <button class="btn-excel" onclick="exportarHistoricoExcel()">
-                        Exportar Relatório (XLSX)
-                    </button>
+                <!-- FILTRO POR DATAS E EXPORTAÇÕES -->
+                <div class="top-bar-painel">
+                    <div class="filtros-data">
+                        <div>
+                            <label>Data Inicial:</label>
+                            <input type="date" id="filtroDataInicio" onchange="listarHistorico()">
+                        </div>
+                        <div>
+                            <label>Data Final:</label>
+                            <input type="date" id="filtroDataFim" onchange="listarHistorico()">
+                        </div>
+                        <button class="btn-cancelar" onclick="limparFiltroData()" style="height: 38px;">Limpar Filtro</button>
+                    </div>
+
+                    <div class="acoes-excel">
+                        <button class="btn-excel" onclick="exportarHistoricoExcel()">
+                            Exportar XLSX
+                        </button>
+                        <button class="btn-pdf" onclick="exportarHistoricoPDF()">
+                            📄 Relatório PDF
+                        </button>
+                    </div>
                 </div>
 
                 <table>
@@ -316,6 +358,7 @@
                     </thead>
                     <tbody id="tabelaHistorico"></tbody>
                 </table>
+                <div class="paginacao-container" id="paginacaoHistorico"></div>
             </div>
         </section>
 
@@ -342,7 +385,8 @@
                         <label><input type="checkbox" class="chk-perm" value="movimentar_direto"> Realizar Saída Direta (Sem aprovação)</label>
                         <label><input type="checkbox" class="chk-perm" value="aprovar_pendencias"> Aprovar Pendências</label>
                         <label><input type="checkbox" class="chk-perm" value="gerenciar_usuarios"> Gerenciar Usuários e Unidades</label>
-                        <label><input type="checkbox" class="chk-perm" value="exportar_excel"> Exportar Relatórios Excel</label>
+                        <label><input type="checkbox" class="chk-perm" value="gerenciar_cargos"> Gerenciar Cargos</label>
+                        <label><input type="checkbox" class="chk-perm" value="exportar_excel"> Exportar Relatórios Excel / PDF</label>
                     </div>
                 </div>
 
