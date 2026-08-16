@@ -1,431 +1,231 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Proxima Nova', -apple-system, Roboto, Arial, sans-serif;
+/* ==========================================================================
+   1. RESET BÁSICO E VARIÁVEIS DE DESIGN (MERCADO LIVRE PALETTE)
+   ========================================================================== */
+
+:root {
+  --ml-yellow: #FFE600;
+  --ml-blue: #3483FA;
+  --ml-blue-hover: #2968C8;
+  --ml-blue-light: #E8F0FE;
+  --ml-bg-main: #EDEDED;
+  --ml-surface: #FFFFFF;
+  --ml-text-dark: #333333;
+  --ml-text-muted: #666666;
+  --ml-border: #E6E6E6;
+  --ml-danger: #E60000;
+  --sidebar-width: 250px;
+  --header-height: 60px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    background-color: #EBEBEB;
-    color: #333333;
-    min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--ml-bg-main);
+  color: var(--ml-text-dark);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-.oculto {
-    display: none !important;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.section-margin {
-    margin-bottom: 25px;
-}
-
-.input-readonly {
-    background-color: #e0e0e0;
-    cursor: not-allowed;
-}
-
-.margin-top-10 {
-    margin-top: 10px;
-}
-
-.full-width {
-    width: 100%;
-}
-
-.btn-group-flex {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.instruction-text {
-    font-size: 0.9rem;
-    color: #666;
-    margin-bottom: 15px;
-    text-align: left;
-}
-
-/* LOGIN & RECUPERAÇÃO */
-.login-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-    background: linear-gradient(135deg, #FFE600 45%, #EBEBEB 45%);
-}
-
-.login-card {
-    background: #FFFFFF;
-    padding: 35px 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    border-top: 6px solid #2D3277;
-}
-
-.brand-header h2 {
-    margin-bottom: 20px;
-    color: #2D3277;
-    font-size: 1.5rem;
-}
-
-.login-footer-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-top: 15px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-    text-align: left;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-size: 0.85rem;
-    color: #4b4b4b;
-    font-weight: 600;
-}
-
-.form-group input, .form-group select, #unidadeSelect {
-    width: 100%;
-    padding: 11px;
-    border: 1px solid #cccccc;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.form-group input:focus, .form-group select:focus, #unidadeSelect:focus {
-    border-color: #3483FA;
-}
-
-.checkbox-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 5px;
-}
-
-.checkbox-group-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 10px;
-    background: #f8f9fa;
-    padding: 12px;
-    border: 1px solid #cccccc;
-    border-radius: 6px;
-    margin-top: 5px;
-}
-
-.checkbox-group label, .checkbox-group-grid label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    cursor: pointer;
-}
-
-/* APP PRINCIPAL E SIDEBAR */
-.app-container {
-    display: flex;
-    min-height: 100vh;
-    width: 100%;
-    position: relative;
-}
+/* ==========================================================================
+   2. CONTAINER PRINCIPAL DA SIDEBAR (CORREÇÃO DE OCULTAÇÃO/CORTE)
+   ========================================================================== */
 
 .sidebar {
-    width: 250px;
-    background-color: #2D3277;
-    color: #FFFFFF;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    z-index: 100;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100vh; /* Ocupa exatamente a altura inteira da tela */
+  background-color: var(--ml-surface);
+  border-right: 1px solid var(--ml-border);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+  
+  /* Mantém cabeçalho, corpo rolável e rodapé empilhados */
+  display: flex;
+  flex-direction: column;
+  
+  z-index: 1000;
+  overflow: hidden; /* Evita que o container pai transborde */
 }
 
-.sidebar.fechada {
-    width: 50px;
+/* ==========================================================================
+   3. CABEÇALHO DA SIDEBAR
+   ========================================================================== */
+
+.sidebar-header {
+  height: var(--header-height);
+  min-height: var(--header-height);
+  background-color: var(--ml-yellow);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-.btn-toggle-sidebar {
-    background: #1f2353;
-    color: #FFE600;
-    border: none;
-    padding: 14px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    text-align: center;
-    width: 100%;
+.sidebar-header-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ml-text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.sidebar-content {
-    padding: 20px 15px;
-    overflow-x: hidden;
-    white-space: nowrap;
-}
-
-.sidebar.fechada .sidebar-content {
-    display: none;
-}
-
-.sidebar-content h3 {
-    font-size: 1.1rem;
-    margin-bottom: 15px;
-    color: #FFE600;
-}
+/* ==========================================================================
+   4. CORPO DA NAVEGAÇÃO E ROLAGEM VERTICAL (ÁREA CRÍTICA)
+   ========================================================================== */
 
 .sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  flex: 1; /* Preenche todo o espaço livre entre topo e rodapé */
+  padding: 12px 0;
+  
+  /* Habilita rolagem vertical perfeita quando há muitos itens */
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* Firefox Scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
-.nav-divider {
-    border: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
-    margin: 10px 0;
+/* Chrome, Edge e Safari Scrollbar */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
 }
 
-.nav-header {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: #a0a5d8;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-    display: block;
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.nav-link {
-    color: #FFFFFF;
-    text-decoration: none;
-    font-size: 0.9rem;
-    padding: 10px 12px;
-    border-radius: 4px;
-    transition: background 0.2s, color 0.2s;
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 3px;
 }
 
-.nav-link:hover, .nav-link.active {
-    background: #3a3f8f;
-    color: #FFE600;
-    font-weight: 600;
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.35);
 }
 
-.main-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
+/* ==========================================================================
+   5. LISTA DE ITENS E LINKS DO MENU
+   ========================================================================== */
+
+.sidebar-menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.topbar {
-    background: #FFE600;
-    color: #2D3277;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+.sidebar-item {
+  width: 100%;
 }
 
-.topbar h1 {
-    font-size: 1.2rem;
-    font-weight: 700;
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: var(--ml-text-dark);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 400;
+  border-left: 4px solid transparent;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+/* Estados interativos */
+.sidebar-link:hover {
+  background-color: #F5F5F5;
+  color: var(--ml-blue);
 }
 
-.user-info span {
-    font-size: 0.85rem;
+.sidebar-link:focus-visible {
+  outline: 2px solid var(--ml-blue);
+  outline-offset: -2px;
 }
 
-.unidade-selector-container {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
+/* Item Ativo/Selecionado */
+.sidebar-item.active .sidebar-link {
+  background-color: var(--ml-blue-light);
+  color: var(--ml-blue);
+  font-weight: 600;
+  border-left-color: var(--ml-blue);
 }
 
-.unidade-selector-container select {
-    max-width: 320px;
+/* Ícones do Menu */
+.sidebar-icon {
+  margin-right: 12px;
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-.content {
-    padding: 20px;
-    flex: 1;
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
+.sidebar-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.card {
-    background: #FFFFFF;
-    padding: 20px;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+/* ==========================================================================
+   6. RODAPÉ DA SIDEBAR
+   ========================================================================== */
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--ml-border);
+  background-color: #FAFAFA;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
 }
 
-.card h3 {
-    margin-bottom: 15px;
-    color: #2D3277;
-    border-bottom: 2px solid #EBEBEB;
-    padding-bottom: 8px;
-    font-size: 1.15rem;
+.sidebar-link-logout {
+  color: var(--ml-danger);
+  width: 100%;
+  border-left-color: transparent;
 }
 
-/* BOTÕES ESTILO ML */
-button {
-    cursor: pointer;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 16px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    transition: background 0.2s;
+.sidebar-link-logout:hover {
+  background-color: #FFF0F0;
+  color: var(--ml-danger);
 }
 
-.btn-primary { background-color: #3483FA; color: #FFFFFF; }
-.btn-primary:hover { background-color: #2968c8; }
-.btn-secondary { background-color: #e0e0e0; color: #333333; }
-.btn-secondary:hover { background-color: #d0d0d0; }
-.btn-danger { background-color: #FF5A5F; color: #FFFFFF; }
-.btn-danger:hover { background-color: #e0484d; }
-.btn-action { padding: 5px 10px; font-size: 0.85rem; margin-right: 4px; margin-bottom: 2px; }
-.btn-link { background: transparent; color: #3483FA; padding: 5px; font-size: 0.85rem; text-decoration: none; }
-.btn-link:hover { text-decoration: underline; }
-.btn-link.text-muted { color: #777777; }
+/* ==========================================================================
+   7. AJUSTE DO CONTEÚDO PRINCIPAL (ÁREA DE TRABALHO DO PAINEL)
+   ========================================================================== */
 
-/* DASHBOARD GRID */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding: 24px;
+  min-height: 100vh;
+  width: calc(100% - var(--sidebar-width));
 }
 
-.stat-card { text-align: center; border-top: 4px solid #3483FA; }
-.stat-card h4 { font-size: 0.85rem; color: #666666; margin-bottom: 8px; text-transform: uppercase; }
-.stat-card p { font-size: 1.8rem; font-weight: bold; color: #2D3277; }
+/* ==========================================================================
+   8. RESPONSIVIDADE (DISPOSITIVOS MÓVEIS)
+   ========================================================================== */
 
-/* FORM GRID */
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 15px;
-}
-
-.form-grid .full-width { grid-column: 1 / -1; }
-
-/* TABELAS RESPONSIVAS */
-.table-responsive { 
-    width: 100%;
-    overflow-x: auto; 
-    -webkit-overflow-scrolling: touch;
-}
-
-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-top: 10px; 
-    min-width: 600px;
-}
-
-th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #EBEBEB; }
-th { background-color: #f8f9fa; color: #2D3277; font-size: 0.85rem; }
-td { font-size: 0.9rem; }
-
-/* BADGES */
-.badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin: 2px; }
-.badge-ok { background-color: #E6F7EE; color: #00A650; }
-.badge-alerta { background-color: #FFF3E0; color: #FF7733; }
-.badge-unit { background-color: #EAF1FC; color: #2D3277; border: 1px solid #b8d1f8; }
-
-/* MODAL */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 1000;
-}
-
-.modal-card {
-    background: #FFFFFF;
-    padding: 25px;
-    border-radius: 8px;
-    max-width: 400px;
-    width: 90%;
-    border-top: 5px solid #2D3277;
-}
-
-.modal-card p { margin: 15px 0; }
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-
-/* TOASTS */
-.toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 90vw; }
-.toast {
-    padding: 12px 20px; margin-bottom: 10px; border-radius: 6px;
-    color: #FFFFFF; background: #333333; box-shadow: 0 4px 10px rgba(0,0,0,0.15); font-size: 0.9rem;
-}
-.toast.sucesso { background-color: #00A650; }
-.toast.alerta { background-color: #FF7733; }
-.toast.erro { background-color: #FF5A5F; }
-.toast.info { background-color: #3483FA; }
-
-/* REGRAS DE MEDIA QUERIES (RESPONSIVIDADE) */
 @media (max-width: 768px) {
-    .login-wrapper {
-        padding-left: 20px;
-    }
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
 
-    .app-container {
-        flex-direction: column;
-    }
+  .sidebar.open {
+    transform: translateX(0);
+  }
 
-    .sidebar {
-        position: fixed;
-        height: 100vh;
-        left: 0;
-        top: 0;
-    }
-
-    .sidebar.fechada {
-        width: 0;
-        overflow: hidden;
-    }
-
-    .sidebar.fechada .btn-toggle-sidebar {
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        border-radius: 50%;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-
-    .topbar {
-        padding-left: 60px;
-    }
-
-    .content {
-        padding: 15px;
-    }
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
 }
