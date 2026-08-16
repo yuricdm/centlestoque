@@ -1,108 +1,229 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstoqueML - Gestão de Estoque</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+/* VARIÁVEIS DE COR E TEMA */
+:root {
+    --ml-yellow: #fff159;
+    --ml-blue: #2d3277;
+    --ml-blue-hover: #1e2252;
+    --ml-dark: #333333;
+    --ml-gray-bg: #f5f5f5;
+    --ml-gray-light: #f8f9fa;
+    --ml-gray-border: #e6e6e6;
+    --ml-gray-text: #666666;
+    --ml-red: #ff5a5f;
+    --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius-ml: 6px;
+    --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
 
-    <!-- CABEÇALHO DA APLICAÇÃO -->
-    <header>
-        <div class="header-container">
-            <div class="logo">
-                <span class="logo-icone">📦</span>
-                <span class="logo-texto"><strong>Estoque</strong>ML</span>
-            </div>
-            <nav id="menu-navegacao">
-                <button onclick="navegarPara('login')" class="btn-sair">Sair</button>
-            </nav>
-        </div>
-    </header>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-main);
+}
 
-    <main>
-        <!-- TELA 1: LOGIN -->
-        <section id="tela-login" class="card-login">
-            <h2>Acesse a sua conta</h2>
-            <p>Informe suas credenciais para entrar no sistema</p>
+html, body {
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--ml-gray-bg) !important;
+    color: var(--ml-dark);
+    display: flex;
+    flex-direction: column;
+}
 
-            <form onsubmit="realizarLogin(event)">
-                <div class="campo-login">
-                    <label for="usuario">Usuário</label>
-                    <input type="text" id="usuario" placeholder="Informe seu usuário" required>
-                </div>
+/* HEADER */
+header {
+    background-color: var(--ml-yellow);
+    box-shadow: var(--shadow-soft);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
 
-                <div class="campo-login">
-                    <label for="senha">Senha</label>
-                    <input type="password" id="senha" placeholder="••••••••" required>
-                </div>
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-                <div class="campo-login-links">
-                    <a href="#" onclick="navegarPara('recuperar')">Esqueceu a senha?</a>
-                </div>
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    color: var(--ml-blue);
+}
 
-                <button type="submit" class="btn-principal btn-block">Entrar</button>
-            </form>
+nav button {
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-ml);
+}
 
-            <div class="dica-perfis">
-                <strong>Padrão para teste (senha 1234):</strong><br>
-                admin | coordenador | supervisor | tecnico
-            </div>
-        </section>
+.btn-sair {
+    color: var(--ml-red);
+    font-weight: 600;
+}
 
-        <!-- TELA 2: RECUPERAÇÃO DE SENHA -->
-        <section id="tela-recuperar" class="card-login oculto">
-            <h2>Recuperar Senha</h2>
-            <p>Informe seu e-mail ou usuário para receber as instruções.</p>
+/* ÁREA PRINCIPAL */
+main {
+    max-width: 1200px;
+    width: 100%;
+    margin: 24px auto;
+    padding: 0 20px;
+    flex: 1;
+}
 
-            <form onsubmit="recuperarSenha(event)">
-                <div class="campo-login">
-                    <label for="email-recupera">E-mail ou Usuário</label>
-                    <input type="email" id="email-recupera" placeholder="seuemail@empresa.com" required>
-                </div>
+.oculto {
+    display: none !important;
+}
 
-                <div class="acoes-formulario">
-                    <button type="submit" class="btn-principal btn-block">Enviar Link</button>
-                    <a href="#" onclick="navegarPara('login')" class="link-voltar">Voltar ao login</a>
-                </div>
-            </form>
-        </section>
+.card-login {
+    background: #ffffff;
+    max-width: 420px;
+    margin: 40px 0;
+    padding: 32px;
+    border-radius: var(--radius-ml);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--ml-gray-border);
+    text-align: left;
+}
 
-        <!-- TELA 3: DASHBOARD GERAL -->
-        <section id="tela-dashboard" class="pagina oculto">
-            <h1>Dashboard Geral <span class="badge-unidade">Consolidado</span></h1>
-            
-            <div class="cards">
-                <div class="card">
-                    <h3>Valor Total em Estoque</h3>
-                    <strong id="kpi-valor">R$ 145.800,00</strong>
-                </div>
-                <div class="card">
-                    <h3>Total de Itens Cadastrados</h3>
-                    <strong id="kpi-itens">1.240 SKUs</strong>
-                </div>
-                <div class="card alerta-card">
-                    <h3>Alertas de Estoque Baixo</h3>
-                    <strong id="kpi-alertas">18 Itens</strong>
-                </div>
-                <div class="card">
-                    <h3>Solicitações Pendentes</h3>
-                    <strong id="kpi-pendentes">3 Requisições</strong>
-                </div>
-            </div>
+.card-login h2 {
+    font-size: 20px;
+    margin-bottom: 6px;
+}
 
-            <div class="painel">
-                <h2>Ações Rápidas</h2>
-                <button onclick="navegarPara('login')" class="btn-cancelar">Encerrar Sessão</button>
-            </div>
-        </section>
-    </main>
+.card-login p {
+    font-size: 13px;
+    color: var(--ml-gray-text);
+    margin-bottom: 24px;
+}
 
-    <footer>
-        <p>&copy; 2026 Mercado Livre Estoque - Todos os direitos reservados.</p>
-    </footer>
+.campo-login {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+.campo-login label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+input[type="text"], input[type="password"], input[type="email"] {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid var(--ml-gray-border);
+    border-radius: var(--radius-ml);
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--ml-blue);
+}
+
+.campo-login-links {
+    text-align: right;
+    margin-bottom: 16px;
+}
+
+.campo-login-links a, .link-voltar {
+    font-size: 12px;
+    color: var(--ml-blue);
+    text-decoration: none;
+}
+
+.btn-principal {
+    background-color: var(--ml-blue);
+    color: #ffffff;
+    border: none;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-ml);
+    cursor: pointer;
+}
+
+.btn-principal:hover {
+    background-color: var(--ml-blue-hover);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.dica-perfis {
+    margin-top: 20px;
+    padding: 12px;
+    background-color: var(--ml-gray-light);
+    border-radius: var(--radius-ml);
+    border: 1px solid var(--ml-gray-border);
+    font-size: 12px;
+    color: var(--ml-gray-text);
+}
+
+/* CARDS DASHBOARD */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.card, .painel {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: var(--radius-ml);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--ml-gray-border);
+}
+
+.card h3 {
+    font-size: 13px;
+    color: var(--ml-gray-text);
+    margin-bottom: 8px;
+}
+
+.card strong {
+    font-size: 24px;
+}
+
+.alerta-card strong {
+    color: var(--ml-red);
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--ml-gray-text);
+    background-color: #ffffff;
+    border-top: 1px solid var(--ml-gray-border);
+    margin-top: auto;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    main {
+        padding: 0 12px;
+    }
+    .card-login {
+        max-width: 100%;
+        margin: 16px 0;
+        padding: 20px;
+    }
+    .cards {
+        grid-template-columns: 1fr;
+    }
+}
