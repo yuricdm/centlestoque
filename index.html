@@ -16,11 +16,11 @@
             <h2>Acesso ao Sistema</h2>
             <form id="form-login">
                 <div class="form-group">
-                    <label>Matrícula ou Login</label>
+                    <label for="login-matricula">Matrícula ou Login</label>
                     <input type="text" id="login-matricula" class="form-control" required placeholder="Digite sua matrícula">
                 </div>
                 <div class="form-group">
-                    <label>Senha</label>
+                    <label for="login-senha">Senha</label>
                     <input type="password" id="login-senha" class="form-control" required placeholder="Digite sua senha">
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
@@ -30,7 +30,7 @@
 
     <!-- TELA PRINCIPAL (APP) -->
     <div id="app-screen" class="screen">
-        <sidebar>
+        <aside class="sidebar">
             <div class="sidebar-header">Gestão de Estoque</div>
             <ul class="nav-links">
                 <li><a href="#" class="nav-item active" data-target="tab-produtos">Estoque / Produtos</a></li>
@@ -43,7 +43,7 @@
                 <p>Cargo: <span id="lbl-user-cargo" class="badge">-</span></p>
                 <button id="btn-logout" class="btn btn-danger" style="margin-top: 10px; width: 100%; font-size: 0.75rem;">Sair</button>
             </div>
-        </sidebar>
+        </aside>
 
         <main>
             <!-- ABA PRODUTOS -->
@@ -54,19 +54,19 @@
                     <form id="form-produto">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Código de Barras / ID</label>
+                                <label for="prod-id">Código de Barras / ID</label>
                                 <input type="text" id="prod-id" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label>Nome do Produto</label>
+                                <label for="prod-nome">Nome do Produto</label>
                                 <input type="text" id="prod-nome" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label>Quantidade</label>
+                                <label for="prod-qtd">Quantidade</label>
                                 <input type="number" id="prod-qtd" class="form-control" min="0" required>
                             </div>
                             <div class="form-group">
-                                <label>Unidade</label>
+                                <label for="prod-unidade">Unidade</label>
                                 <select id="prod-unidade" class="form-control" required></select>
                             </div>
                         </div>
@@ -98,27 +98,27 @@
                         <input type="hidden" id="usr-editing-matricula">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>Nome Completo</label>
+                                <label for="usr-nome">Nome Completo</label>
                                 <input type="text" id="usr-nome" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label>CPF / Matrícula</label>
+                                <label for="usr-cpf">CPF / Matrícula</label>
                                 <input type="text" id="usr-cpf" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label>E-mail</label>
+                                <label for="usr-email">E-mail</label>
                                 <input type="email" id="usr-email" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label>Cargo</label>
+                                <label for="usr-cargo">Cargo</label>
                                 <select id="usr-cargo" class="form-control" required></select>
                             </div>
                             <div class="form-group">
-                                <label>Senha</label>
+                                <label for="usr-senha">Senha</label>
                                 <input type="password" id="usr-senha" class="form-control" placeholder="Preencha apenas para alterar">
                             </div>
                             <div class="form-group">
-                                <label>Unidades de Acesso</label>
+                                <label for="usr-unidades">Unidades de Acesso</label>
                                 <select id="usr-unidades" class="form-control" multiple required></select>
                             </div>
                         </div>
@@ -150,11 +150,11 @@
                     <form id="form-cargo">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>ID do Cargo</label>
+                                <label for="cargo-id">ID do Cargo</label>
                                 <input type="text" id="cargo-id" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label>Nome do Cargo</label>
+                                <label for="cargo-nome">Nome do Cargo</label>
                                 <input type="text" id="cargo-nome" class="form-control" required>
                             </div>
                         </div>
@@ -183,11 +183,11 @@
                     <form id="form-unidade">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>ID da Unidade</label>
+                                <label for="unidade-id">ID da Unidade</label>
                                 <input type="text" id="unidade-id" class="form-control" required>
                             </div>
                             <div class="form-group">
-                                <label>Nome da Unidade</label>
+                                <label for="unidade-nome">Nome da Unidade</label>
                                 <input type="text" id="unidade-nome" class="form-control" required>
                             </div>
                         </div>
