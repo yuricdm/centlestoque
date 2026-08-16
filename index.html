@@ -1,96 +1,215 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Administrativo</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Estoque & Usuários</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- BARRA LATERAL (SIDEBAR) -->
-  <aside class="sidebar">
-    
-    <!-- Cabeçalho da Sidebar -->
-    <div class="sidebar-header">
-      <span>Painel Admin</span>
+    <div id="toast-container"></div>
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="screen active">
+        <div class="login-card">
+            <h2>Acesso ao Sistema</h2>
+            <form id="form-login">
+                <div class="form-group">
+                    <label>Matrícula ou Login</label>
+                    <input type="text" id="login-matricula" class="form-control" required placeholder="Digite sua matrícula">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="login-senha" class="form-control" required placeholder="Digite sua senha">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
+            </form>
+        </div>
     </div>
 
-    <!-- Navegação com Scroll Interno -->
-    <nav class="sidebar-nav">
-      <ul class="sidebar-menu">
-        <li class="sidebar-item active">
-          <a href="#" class="sidebar-link">
-            <span class="sidebar-icon">📊</span>
-            <span>Dashboard</span>
-          </a>
-        </li>
-        <li class="sidebar-item">
-          <a href="#" class="sidebar-link">
-            <span class="sidebar-icon">📦</span>
-            <span>Estoque e Produtos</span>
-          </a>
-        </li>
-        <li class="sidebar-item">
-          <a href="#" class="sidebar-link">
-            <span class="sidebar-icon">🏷️</span>
-            <span>Anúncios</span>
-          </a>
-        </li>
-        <li class="sidebar-item">
-          <a href="#" class="sidebar-link">
-            <span class="sidebar-icon">🛒</span>
-            <span>Vendas</span>
-          </a>
-        </li>
-        <li class="sidebar-item">
-          <a href="#" class="sidebar-link">
-            <span class="sidebar-icon">🚚</span>
-            <span>Envios e Logística</span>
-          </a>
-        </li>
-        <li class="sidebar-item">
-          <a href="#" class="sidebar-link">
-            <span class="sidebar-icon">👥</span>
-            <span>Usuários e Permissões</span>
-          </a>
-        </li>
-        <li class="sidebar-item">
-          <a href="#" class="sidebar-link">
-            <span class="sidebar-icon">💳</span>
-            <span>Financeiro</span>
-          </a>
-        </li>
-        <li class="sidebar-item">
-          <a href="#" class="sidebar-link">
-            <span class="sidebar-icon">📈</span>
-            <span>Relatórios</span>
-          </a>
-        </li>
-        <li class="sidebar-item">
-          <a href="#" class="sidebar-link">
-            <span class="sidebar-icon">⚙️</span>
-            <span>Configurações</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
+    <!-- TELA PRINCIPAL (APP) -->
+    <div id="app-screen" class="screen">
+        <sidebar>
+            <div class="sidebar-header">Gestão de Estoque</div>
+            <ul class="nav-links">
+                <li><a href="#" class="nav-item active" data-target="tab-produtos">Estoque / Produtos</a></li>
+                <li><a href="#" class="nav-item" data-target="tab-usuarios">Usuários</a></li>
+                <li><a href="#" class="nav-item" data-target="tab-cargos">Cargos & Permissões</a></li>
+                <li><a href="#" class="nav-item" data-target="tab-unidades">Unidades</a></li>
+            </ul>
+            <div class="user-info">
+                <p>Usuário: <strong id="lbl-user-nome">-</strong></p>
+                <p>Cargo: <span id="lbl-user-cargo" class="badge">-</span></p>
+                <button id="btn-logout" class="btn btn-danger" style="margin-top: 10px; width: 100%; font-size: 0.75rem;">Sair</button>
+            </div>
+        </sidebar>
 
-    <!-- Rodapé Fixado na Base da Sidebar -->
-    <div class="sidebar-footer">
-      <a href="#" class="sidebar-link" style="padding: 0; color: #E60000;">
-        <span class="sidebar-icon">🚪</span>
-        <span>Sair do Sistema</span>
-      </a>
+        <main>
+            <!-- ABA PRODUTOS -->
+            <div id="tab-produtos" class="tab-content active">
+                <h2>Gerenciamento de Produtos</h2>
+                <br>
+                <div class="card">
+                    <form id="form-produto">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Código de Barras / ID</label>
+                                <input type="text" id="prod-id" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nome do Produto</label>
+                                <input type="text" id="prod-nome" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Quantidade</label>
+                                <input type="number" id="prod-qtd" class="form-control" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Unidade</label>
+                                <select id="prod-unidade" class="form-control" required></select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar Produto</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Qtd</th>
+                                <th>Unidade</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tb-produtos"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ABA USUÁRIOS -->
+            <div id="tab-usuarios" class="tab-content">
+                <h2>Cadastro de Usuários</h2>
+                <br>
+                <div class="card">
+                    <form id="form-usuario">
+                        <input type="hidden" id="usr-editing-matricula">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Nome Completo</label>
+                                <input type="text" id="usr-nome" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>CPF / Matrícula</label>
+                                <input type="text" id="usr-cpf" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>E-mail</label>
+                                <input type="email" id="usr-email" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Cargo</label>
+                                <select id="usr-cargo" class="form-control" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Senha</label>
+                                <input type="password" id="usr-senha" class="form-control" placeholder="Preencha apenas para alterar">
+                            </div>
+                            <div class="form-group">
+                                <label>Unidades de Acesso</label>
+                                <select id="usr-unidades" class="form-control" multiple required></select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar Usuário</button>
+                        <button type="button" id="btn-cancelar-usr" class="btn btn-secondary" style="display:none;">Cancelar</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Matrícula</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Cargo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tb-usuarios"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ABA CARGOS -->
+            <div id="tab-cargos" class="tab-content">
+                <h2>Gerenciamento de Cargos</h2>
+                <br>
+                <div class="card">
+                    <form id="form-cargo">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>ID do Cargo</label>
+                                <input type="text" id="cargo-id" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nome do Cargo</label>
+                                <input type="text" id="cargo-nome" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Adicionar Cargo</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome do Cargo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tb-cargos"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ABA UNIDADES -->
+            <div id="tab-unidades" class="tab-content">
+                <h2>Gerenciamento de Unidades</h2>
+                <br>
+                <div class="card">
+                    <form id="form-unidade">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>ID da Unidade</label>
+                                <input type="text" id="unidade-id" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nome da Unidade</label>
+                                <input type="text" id="unidade-nome" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Adicionar Unidade</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome da Unidade</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tb-unidades"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 
-  </aside>
-
-  <!-- ÁREA PRINCIPAL DO PAINEL -->
-  <main class="main-content">
-    <h1>Visão Geral do Sistema</h1>
-    <p>O conteúdo da página se ajusta ao lado da sidebar sem cobrir nenhum item.</p>
-  </main>
-
+    <script src="script.js"></script>
 </body>
 </html>
