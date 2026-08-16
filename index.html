@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Controle de Estoque</title>
+    <title>Sistema de Controle de Estoque e Gestão</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,8 +17,8 @@
             <h2>Acesso ao Sistema</h2>
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="usuarioInput">Usuário</label>
-                    <input type="text" id="usuarioInput" autocomplete="username" placeholder="Ex: admin" required>
+                    <label for="usuarioInput">Matrícula (6 dígitos do CPF)</label>
+                    <input type="text" id="usuarioInput" autocomplete="username" placeholder="Ex: 123456" required>
                 </div>
                 <div class="form-group">
                     <label for="senhaInput">Senha</label>
@@ -45,6 +45,11 @@
                     <a href="#cadastroSection" class="nav-link">Cadastrar Produto</a>
                     <a href="#produtosSection" class="nav-link">Estoque</a>
                     <a href="#historicoSection" class="nav-link">Histórico</a>
+                    <hr class="nav-divider">
+                    <span class="nav-header">Administração</span>
+                    <a href="#usuariosSection" class="nav-link">Usuários</a>
+                    <a href="#cargosSection" class="nav-link">Cargos & Permissões</a>
+                    <a href="#unidadesSection" class="nav-link">Unidades</a>
                 </nav>
             </div>
         </aside>
@@ -52,9 +57,10 @@
         <!-- CONTEÚDO PRINCIPAL -->
         <div class="main-wrapper">
             <header class="topbar">
-                <h1>Controle de Estoque Unificado</h1>
+                <h1>Controle de Estoque & Gestão</h1>
                 <div class="user-info">
                     <span>Usuário: <strong id="usuarioNomeLogado">-</strong></span>
+                    <span>Cargo: <strong id="usuarioCargoLogado">-</strong></span>
                     <button onclick="encerrarSessao()" class="btn-danger">Sair</button>
                 </div>
             </header>
@@ -129,16 +135,14 @@
                                 </tr>
                             </thead>
                             <tbody id="tabelaProdutosBody">
-                                <tr>
-                                    <td colspan="7" class="text-center">Nenhum produto cadastrado.</td>
-                                </tr>
+                                <tr><td colspan="7" class="text-center">Nenhum produto cadastrado.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
 
                 <!-- HISTÓRICO DE MOVIMENTAÇÕES -->
-                <section id="historicoSection" class="card">
+                <section id="historicoSection" class="card section-margin">
                     <h3>Histórico de Movimentações</h3>
                     <div class="table-responsive">
                         <table>
@@ -152,10 +156,133 @@
                                 </tr>
                             </thead>
                             <tbody id="tabelaHistoricoBody">
-                                <tr>
-                                    <td colspan="5" class="text-center">Nenhuma movimentação registrada.</td>
-                                </tr>
+                                <tr><td colspan="5" class="text-center">Nenhuma movimentação registrada.</td></tr>
                             </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- GESTÃO DE USUÁRIOS -->
+                <section id="usuariosSection" class="card section-margin">
+                    <h3>Gerenciamento de Usuários</h3>
+                    <form id="usuarioForm" class="form-grid">
+                        <div class="form-group">
+                            <label for="usrNomeCompleto">Nome Completo</label>
+                            <input type="text" id="usrNomeCompleto" placeholder="Ex: João da Silva" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="usrCpf">CPF (Apenas números ou formatado)</label>
+                            <input type="text" id="usrCpf" placeholder="000.000.000-00" oninput="atualizarMatriculaPreview(this.value)" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="usrMatricula">Matrícula para Login (6 primeiros dígitos do CPF)</label>
+                            <input type="text" id="usrMatricula" readonly placeholder="Gerado automaticamente" class="input-readonly">
+                        </div>
+                        <div class="form-group">
+                            <label for="usrEmail">E-mail</label>
+                            <input type="email" id="usrEmail" placeholder="joao@empresa.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="usrSenha">Senha Inicial</label>
+                            <input type="password" id="usrSenha" placeholder="Digite a senha" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="usrCargo">Cargo / Permissão</label>
+                            <select id="usrCargo" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="usrUnidade">Unidade Designada</label>
+                            <select id="usrUnidade" required></select>
+                        </div>
+                        <div class="form-group full-width">
+                            <button type="submit" class="btn-primary">Cadastrar Usuário</button>
+                        </div>
+                    </form>
+
+                    <h4 class="sub-title">Usuários Cadastrados</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Matrícula</th>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>E-mail</th>
+                                    <th>Cargo</th>
+                                    <th>Unidade</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaUsuariosBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- GESTÃO DE CARGOS E PERMISSÕES -->
+                <section id="cargosSection" class="card section-margin">
+                    <h3>Cargos e Permissões</h3>
+                    <form id="cargoForm" class="form-grid">
+                        <div class="form-group">
+                            <label for="cargoNome">Nome do Cargo</label>
+                            <input type="text" id="cargoNome" placeholder="Ex: Gerente de Estoque" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Permissões do Cargo:</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" id="permMovimentar" checked> Movimentar Estoque (+ / -)</label>
+                                <label><input type="checkbox" id="permCadastrarProd" checked> Cadastrar/Excluir Produtos</label>
+                                <label><input type="checkbox" id="permGerenciarAdmin"> Acesso ao Painel Administrativo (Usuários/Cargos/Unidades)</label>
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <button type="submit" class="btn-primary">Salvar Cargo</button>
+                        </div>
+                    </form>
+
+                    <h4 class="sub-title">Cargos Existentes</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cargo</th>
+                                    <th>Permissões</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaCargosBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- GESTÃO DE UNIDADES -->
+                <section id="unidadesSection" class="card">
+                    <h3>Gerenciamento de Unidades</h3>
+                    <form id="unidadeForm" class="form-grid">
+                        <div class="form-group">
+                            <label for="unidadeCodigo">Código da Unidade</label>
+                            <input type="text" id="unidadeCodigo" placeholder="Ex: POA1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="unidadeNome">Nome Completo da Unidade</label>
+                            <input type="text" id="unidadeNome" placeholder="Ex: POA1 PORTO ALEGRE - RS" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <button type="submit" class="btn-primary">Cadastrar Unidade</button>
+                        </div>
+                    </form>
+
+                    <h4 class="sub-title">Unidades Cadastradas</h4>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nome da Unidade</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaUnidadesBody"></tbody>
                         </table>
                     </div>
                 </section>
@@ -170,7 +297,7 @@
             <p id="modalMensagem"></p>
             <div id="modalInputContainer" class="form-group oculto">
                 <label id="modalInputLabel" for="modalInput">Quantidade:</label>
-                <input type="number" id="modalInput" min="1">
+                <input type="text" id="modalInput">
             </div>
             <div class="modal-actions">
                 <button onclick="fecharModal(true)" class="btn-primary">Confirmar</button>
