@@ -79,6 +79,15 @@ function processarRecuperacaoSenha(e) {
 // ==========================================================================
 
 function navegarPara(idSecaoTarget) {
+    const cargoAtual = cargos.find(c => c.id === usuarioLogado?.cargoId) || {};
+    
+    // Trava de segurança para seções administrativas
+    const secoesAdmin = ['usuariosSection', 'cargosSection', 'unidadesSection'];
+    if (secoesAdmin.includes(idSecaoTarget) && !cargoAtual.permGerenciarAdmin) {
+        exibirToast("Acesso não autorizado para seu perfil.", "erro");
+        return;
+    }
+
     const secoes = document.querySelectorAll('.app-section');
     secoes.forEach(sec => sec.classList.add('oculto'));
 
@@ -195,7 +204,6 @@ let usuarios = JSON.parse(localStorage.getItem("usuarios")) || USUARIOS_PADRAO;
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
 
-// MIGRAÇÃO CASO HOUVESSE DADOS ANTIGOS (COM APENAS unidadeId)
 usuarios = usuarios.map(u => {
     if (!u.unidadesIds) {
         u.unidadesIds = u.unidadeId ? [u.unidadeId] : [unidades[0].id];
@@ -234,7 +242,7 @@ async function realizarLogin(e) {
 
     const conta = usuarios.find(u => 
         (u.matricula === matriculaVal || u.login === matriculaVal) && 
-        (u.senhaHash === hashForm || u.senhaB64 === b64Form || u.senha === senhaVal || u.senhaHash === HASH_1234_SHA)
+        (u.senhaHash === hashForm || u.senhaB64 === b64Form || u.senha === senhaVal)
     );
 
     if (conta) {
@@ -505,6 +513,12 @@ function removerUnidade(id) {
 
 function cadastrarProduto(e) {
     e.preventDefault();
+    const cargoAtual = cargos.find(c => c.id === usuarioLogado.cargoId) || {};
+
+    if (!cargoAtual.permCadastrarProd) {
+        exibirToast("Seu cargo não possui permissão para cadastrar produtos.", "erro");
+        return;
+    }
 
     const nome = document.getElementById("prodNome").value.trim();
     const categoria = document.getElementById("prodCategoria").value.trim();
@@ -539,6 +553,12 @@ function cadastrarProduto(e) {
 }
 
 async function movimentarEstoque(id, tipo) {
+    const cargoAtual = cargos.find(c => c.id === usuarioLogado.cargoId) || {};
+    if (!cargoAtual.permMovimentar) {
+        exibirToast("Seu cargo não possui permissão para movimentar estoque.", "erro");
+        return;
+    }
+
     const produto = produtos.find(p => p.id === id);
     if (!produto) return;
 
@@ -574,6 +594,12 @@ async function movimentarEstoque(id, tipo) {
 }
 
 async function removerProduto(id) {
+    const cargoAtual = cargos.find(c => c.id === usuarioLogado.cargoId) || {};
+    if (!cargoAtual.permCadastrarProd) {
+        exibirToast("Seu cargo não possui permissão para excluir produtos.", "erro");
+        return;
+    }
+
     const confirmado = await exibirModal({
         titulo: "Excluir Produto",
         mensagem: "Tem certeza que deseja remover este produto?"
@@ -592,7 +618,7 @@ async function removerProduto(id) {
 // ==========================================================================
 
 function atualizarInterface() {
-    const cargoAtual = cargos.find(c => c.id === usuarioLogado.cargoId) || { nome: "Sem Cargo", permGerenciarAdmin: true };
+    const cargoAtual = cargos.find(c => c.id === usuarioLogado?.cargoId) || { nome: "Sem Cargo", permGerenciarAdmin: false };
 
     if (usuarioLogado) {
         document.getElementById("usuarioNomeLogado").textContent = usuarioLogado.nome;
@@ -604,6 +630,15 @@ function atualizarInterface() {
         navAdminGroup.classList.remove("oculto");
     } else {
         navAdminGroup.classList.add("oculto");
+    }
+
+    const linkCadastrarProd = document.getElementById("linkCadastrarProd");
+    if (linkCadastrarProd) {
+        if (cargoAtual.permCadastrarProd) {
+            linkCadastrarProd.classList.remove("oculto");
+        } else {
+            linkCadastrarProd.classList.add("oculto");
+        }
     }
 
     const produtosUnidade = produtos.filter(p => p.unidadeId === unidadeSelecionada.id);
@@ -718,7 +753,7 @@ function atualizarInterface() {
 }
 
 // ==========================================================================
-// 8. INICIALIZAÇÃO
+// 8. INICIALIZAÇÃO E EVENTOS GLOBAIS
 // ==========================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -728,6 +763,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("usuarioForm").addEventListener("submit", salvarUsuario);
     document.getElementById("cargoForm").addEventListener("submit", cadastrarCargo);
     document.getElementById("unidadeForm").addEventListener("submit", cadastrarUnidade);
+
+    document.addEventListener("click", (e) => {
+        const sidebar = document.getElementById("sidebar");
+        const toggleBtn = document.getElementById("toggleSidebar");
+        if (window.innerWidth <= 768 && 
+            !sidebar.classList.contains("fechada") && 
+            !sidebar.contains(e.target) && 
+            !toggleBtn.contains(e.target)) {
+            alternarSidebar();
+        }
+    });
 
     if (usuarioLogado) {
         iniciarSessao();
