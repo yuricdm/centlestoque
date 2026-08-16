@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Controle de Estoque e Gestão</title>
+    <title>Sistema de Controle de Estoque e Gestão - Mercado Livre Style</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,11 @@
     <!-- TELA DE LOGIN (LATERAL ESQUERDA) -->
     <div id="loginArea" class="login-wrapper">
         <div class="login-card">
-            <h2>Acesso ao Sistema</h2>
+            <div class="brand-header">
+                <h2>Acesso ao Sistema</h2>
+            </div>
+
+            <!-- FORMULÁRIO DE LOGIN -->
             <form id="loginForm">
                 <div class="form-group">
                     <label for="usuarioInput">Matrícula (6 dígitos do CPF)</label>
@@ -26,7 +30,29 @@
                 </div>
                 <button type="submit" id="btnLogin" class="btn-primary">Entrar</button>
             </form>
-            <button type="button" class="btn-link" onclick="resetarDadosSistema()">Resetar Dados de Teste</button>
+
+            <div class="login-footer-actions">
+                <button type="button" class="btn-link" onclick="exibirTelaRecuperacao(true)">Esqueceu a senha?</button>
+                <button type="button" class="btn-link text-muted" onclick="resetarDadosSistema()">Resetar Dados de Teste</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA DE RECUPERAÇÃO DE SENHA -->
+    <div id="recuperarSenhaArea" class="login-wrapper oculto">
+        <div class="login-card">
+            <div class="brand-header">
+                <h2>Recuperar Senha</h2>
+            </div>
+            <p class="instruction-text">Informe seu e-mail cadastrado ou CPF para redefinir sua senha de acesso.</p>
+            <form id="recuperarSenhaForm">
+                <div class="form-group">
+                    <label for="recuperarInput">E-mail ou CPF</label>
+                    <input type="text" id="recuperarInput" placeholder="seuemail@exemplo.com ou CPF" required>
+                </div>
+                <button type="submit" class="btn-primary">Solicitar Redefinição</button>
+                <button type="button" class="btn-secondary full-width margin-top-10" onclick="exibirTelaRecuperacao(false)">Voltar ao Login</button>
+            </form>
         </div>
     </div>
 
@@ -66,7 +92,7 @@
             </header>
 
             <main class="content">
-                <!-- SELETOR DE UNIDADE NA TELA INICIAL -->
+                <!-- SELETOR DE UNIDADE -->
                 <section class="card section-margin">
                     <div class="unidade-selector-container">
                         <label for="unidadeSelect"><strong>Unidade Atual:</strong></label>
@@ -231,7 +257,7 @@
                             <div class="checkbox-group">
                                 <label><input type="checkbox" id="permMovimentar" checked> Movimentar Estoque (+ / -)</label>
                                 <label><input type="checkbox" id="permCadastrarProd" checked> Cadastrar/Excluir Produtos</label>
-                                <label><input type="checkbox" id="permGerenciarAdmin"> Acesso ao Painel Administrativo (Usuários/Cargos/Unidades)</label>
+                                <label><input type="checkbox" id="permGerenciarAdmin"> Acesso ao Painel Administrativo</label>
                             </div>
                         </div>
                         <div class="form-group full-width">
