@@ -11,14 +11,12 @@
     <!-- NOTIFICAÇÕES TOAST -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- TELA DE LOGIN (LATERAL ESQUERDA) -->
+    <!-- TELA DE LOGIN -->
     <div id="loginArea" class="login-wrapper">
         <div class="login-card">
             <div class="brand-header">
                 <h2>Acesso ao Sistema</h2>
             </div>
-
-            <!-- FORMULÁRIO DE LOGIN -->
             <form id="loginForm">
                 <div class="form-group">
                     <label for="usuarioInput">Matrícula (6 dígitos do CPF)</label>
@@ -28,9 +26,8 @@
                     <label for="senhaInput">Senha</label>
                     <input type="password" id="senhaInput" autocomplete="current-password" placeholder="Ex: 1234" required>
                 </div>
-                <button type="submit" id="btnLogin" class="btn-primary">Entrar</button>
+                <button type="submit" id="btnLogin" class="btn-primary full-width">Entrar</button>
             </form>
-
             <div class="login-footer-actions">
                 <button type="button" class="btn-link" onclick="exibirTelaRecuperacao(true)">Esqueceu a senha?</button>
                 <button type="button" class="btn-link text-muted" onclick="resetarDadosSistema()">Resetar Dados de Teste</button>
@@ -50,7 +47,7 @@
                     <label for="recuperarInput">E-mail ou CPF</label>
                     <input type="text" id="recuperarInput" placeholder="seuemail@exemplo.com ou CPF" required>
                 </div>
-                <button type="submit" class="btn-primary">Solicitar Redefinição</button>
+                <button type="submit" class="btn-primary full-width">Solicitar Redefinição</button>
                 <button type="button" class="btn-secondary full-width margin-top-10" onclick="exibirTelaRecuperacao(false)">Voltar ao Login</button>
             </form>
         </div>
@@ -59,7 +56,7 @@
     <!-- TELA PRINCIPAL DO SISTEMA -->
     <div id="mainArea" class="app-container oculto">
         
-        <!-- SIDEBAR (MENU LATERAL RETRÁTIL) -->
+        <!-- SIDEBAR (MENU LATERAL) -->
         <aside id="sidebar" class="sidebar fechada">
             <button id="toggleSidebar" class="btn-toggle-sidebar" onclick="alternarSidebar()">
                 <span id="iconSidebar">&#x2630;</span>
@@ -67,15 +64,18 @@
             <div class="sidebar-content">
                 <h3>Navegação</h3>
                 <nav class="sidebar-nav">
-                    <a href="#dashSection" class="nav-link">Dashboard</a>
-                    <a href="#cadastroSection" class="nav-link">Cadastrar Produto</a>
-                    <a href="#produtosSection" class="nav-link">Estoque</a>
-                    <a href="#historicoSection" class="nav-link">Histórico</a>
-                    <hr class="nav-divider">
-                    <span class="nav-header">Administração</span>
-                    <a href="#usuariosSection" class="nav-link">Usuários</a>
-                    <a href="#cargosSection" class="nav-link">Cargos & Permissões</a>
-                    <a href="#unidadesSection" class="nav-link">Unidades</a>
+                    <a href="#" onclick="navegarPara('dashSection')" class="nav-link active">Dashboard</a>
+                    <a href="#" onclick="navegarPara('cadastroSection')" class="nav-link">Cadastrar Produto</a>
+                    <a href="#" onclick="navegarPara('produtosSection')" class="nav-link">Estoque</a>
+                    <a href="#" onclick="navegarPara('historicoSection')" class="nav-link">Histórico</a>
+                    
+                    <div id="navAdminGroup" class="admin-only-nav">
+                        <hr class="nav-divider">
+                        <span class="nav-header">Administração</span>
+                        <a href="#" onclick="navegarPara('usuariosSection')" class="nav-link">Usuários</a>
+                        <a href="#" onclick="navegarPara('cargosSection')" class="nav-link">Cargos & Permissões</a>
+                        <a href="#" onclick="navegarPara('unidadesSection')" class="nav-link">Unidades</a>
+                    </div>
                 </nav>
             </div>
         </aside>
@@ -92,224 +92,244 @@
             </header>
 
             <main class="content">
-                <!-- SELETOR DE UNIDADE -->
-                <section class="card section-margin">
+                <!-- SELETOR DE UNIDADE ATIVA (VISÍVEL EM TODAS AS TELAS DA APLICAÇÃO) -->
+                <div class="card section-margin">
                     <div class="unidade-selector-container">
-                        <label for="unidadeSelect"><strong>Unidade Atual:</strong></label>
-                        <select id="unidadeSelect" onchange="trocarUnidade(this.value)">
-                            <!-- Opções dinâmicas via JS -->
-                        </select>
+                        <label for="unidadeSelect"><strong>Unidade Ativa:</strong></label>
+                        <select id="unidadeSelect" onchange="trocarUnidade(this.value)"></select>
+                    </div>
+                </div>
+
+                <!-- TELA 1: DASHBOARD -->
+                <section id="dashSection" class="app-section">
+                    <div class="dashboard-grid">
+                        <div class="card stat-card">
+                            <h4>Total de Produtos</h4>
+                            <p id="statTotalProdutos">0</p>
+                        </div>
+                        <div class="card stat-card">
+                            <h4>Itens em Alerta</h4>
+                            <p id="statItensAlerta">0</p>
+                        </div>
+                        <div class="card stat-card">
+                            <h4>Total em Estoque</h4>
+                            <p id="statTotalEstoque">0</p>
+                        </div>
                     </div>
                 </section>
 
-                <!-- PAINEL DE CONTROLE / ESTATÍSTICAS -->
-                <section id="dashSection" class="dashboard-grid">
-                    <div class="card stat-card">
-                        <h4>Total de Produtos</h4>
-                        <p id="statTotalProdutos">0</p>
-                    </div>
-                    <div class="card stat-card">
-                        <h4>Itens em Alerta</h4>
-                        <p id="statItensAlerta">0</p>
-                    </div>
-                    <div class="card stat-card">
-                        <h4>Total em Estoque</h4>
-                        <p id="statTotalEstoque">0</p>
-                    </div>
-                </section>
-
-                <!-- CADASTRO DE PRODUTO -->
-                <section id="cadastroSection" class="card section-margin">
-                    <h3>Cadastrar Novo Produto</h3>
-                    <form id="produtoForm" class="form-grid">
-                        <div class="form-group">
-                            <label for="prodNome">Nome do Produto</label>
-                            <input type="text" id="prodNome" placeholder="Ex: Teclado USB" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="prodCategoria">Categoria</label>
-                            <input type="text" id="prodCategoria" placeholder="Ex: Periféricos" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="prodQuantidade">Quantidade Inicial</label>
-                            <input type="number" id="prodQuantidade" min="0" value="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="prodMinimo">Estoque Mínimo</label>
-                            <input type="number" id="prodMinimo" min="0" value="5" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <button type="submit" class="btn-primary">Salvar Produto</button>
-                        </div>
-                    </form>
-                </section>
-
-                <!-- TABELA DE PRODUTOS -->
-                <section id="produtosSection" class="card section-margin">
-                    <h3>Produtos em Estoque</h3>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Produto</th>
-                                    <th>Categoria</th>
-                                    <th>Qtd. Atual</th>
-                                    <th>Mínimo</th>
-                                    <th>Status</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaProdutosBody">
-                                <tr><td colspan="7" class="text-center">Nenhum produto cadastrado.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- HISTÓRICO DE MOVIMENTAÇÕES -->
-                <section id="historicoSection" class="card section-margin">
-                    <h3>Histórico de Movimentações</h3>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Data/Hora</th>
-                                    <th>Produto</th>
-                                    <th>Tipo</th>
-                                    <th>Quantidade</th>
-                                    <th>Usuário</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaHistoricoBody">
-                                <tr><td colspan="5" class="text-center">Nenhuma movimentação registrada.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- GESTÃO DE USUÁRIOS -->
-                <section id="usuariosSection" class="card section-margin">
-                    <h3>Gerenciamento de Usuários</h3>
-                    <form id="usuarioForm" class="form-grid">
-                        <div class="form-group">
-                            <label for="usrNomeCompleto">Nome Completo</label>
-                            <input type="text" id="usrNomeCompleto" placeholder="Ex: João da Silva" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="usrCpf">CPF (Apenas números ou formatado)</label>
-                            <input type="text" id="usrCpf" placeholder="000.000.000-00" oninput="atualizarMatriculaPreview(this.value)" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="usrMatricula">Matrícula para Login (6 primeiros dígitos do CPF)</label>
-                            <input type="text" id="usrMatricula" readonly placeholder="Gerado automaticamente" class="input-readonly">
-                        </div>
-                        <div class="form-group">
-                            <label for="usrEmail">E-mail</label>
-                            <input type="email" id="usrEmail" placeholder="joao@empresa.com" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="usrSenha">Senha Inicial</label>
-                            <input type="password" id="usrSenha" placeholder="Digite a senha" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="usrCargo">Cargo / Permissão</label>
-                            <select id="usrCargo" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label for="usrUnidade">Unidade Designada</label>
-                            <select id="usrUnidade" required></select>
-                        </div>
-                        <div class="form-group full-width">
-                            <button type="submit" class="btn-primary">Cadastrar Usuário</button>
-                        </div>
-                    </form>
-
-                    <h4 class="sub-title">Usuários Cadastrados</h4>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Matrícula</th>
-                                    <th>Nome</th>
-                                    <th>CPF</th>
-                                    <th>E-mail</th>
-                                    <th>Cargo</th>
-                                    <th>Unidade</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaUsuariosBody"></tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <!-- GESTÃO DE CARGOS E PERMISSÕES -->
-                <section id="cargosSection" class="card section-margin">
-                    <h3>Cargos e Permissões</h3>
-                    <form id="cargoForm" class="form-grid">
-                        <div class="form-group">
-                            <label for="cargoNome">Nome do Cargo</label>
-                            <input type="text" id="cargoNome" placeholder="Ex: Gerente de Estoque" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Permissões do Cargo:</label>
-                            <div class="checkbox-group">
-                                <label><input type="checkbox" id="permMovimentar" checked> Movimentar Estoque (+ / -)</label>
-                                <label><input type="checkbox" id="permCadastrarProd" checked> Cadastrar/Excluir Produtos</label>
-                                <label><input type="checkbox" id="permGerenciarAdmin"> Acesso ao Painel Administrativo</label>
+                <!-- TELA 2: CADASTRO DE PRODUTO -->
+                <section id="cadastroSection" class="app-section oculto">
+                    <div class="card">
+                        <h3>Cadastrar Novo Produto</h3>
+                        <form id="produtoForm" class="form-grid">
+                            <div class="form-group">
+                                <label for="prodNome">Nome do Produto</label>
+                                <input type="text" id="prodNome" placeholder="Ex: Teclado USB" required>
                             </div>
-                        </div>
-                        <div class="form-group full-width">
-                            <button type="submit" class="btn-primary">Salvar Cargo</button>
-                        </div>
-                    </form>
-
-                    <h4 class="sub-title">Cargos Existentes</h4>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Cargo</th>
-                                    <th>Permissões</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaCargosBody"></tbody>
-                        </table>
+                            <div class="form-group">
+                                <label for="prodCategoria">Categoria</label>
+                                <input type="text" id="prodCategoria" placeholder="Ex: Periféricos" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="prodQuantidade">Quantidade Inicial</label>
+                                <input type="number" id="prodQuantidade" min="0" value="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="prodMinimo">Estoque Mínimo</label>
+                                <input type="number" id="prodMinimo" min="0" value="5" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-primary">Salvar Produto</button>
+                            </div>
+                        </form>
                     </div>
                 </section>
 
-                <!-- GESTÃO DE UNIDADES -->
-                <section id="unidadesSection" class="card">
-                    <h3>Gerenciamento de Unidades</h3>
-                    <form id="unidadeForm" class="form-grid">
-                        <div class="form-group">
-                            <label for="unidadeCodigo">Código da Unidade</label>
-                            <input type="text" id="unidadeCodigo" placeholder="Ex: POA1" required>
+                <!-- TELA 3: TABELA DE PRODUTOS / ESTOQUE -->
+                <section id="produtosSection" class="app-section oculto">
+                    <div class="card">
+                        <h3>Produtos em Estoque</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Produto</th>
+                                        <th>Categoria</th>
+                                        <th>Qtd. Atual</th>
+                                        <th>Mínimo</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaProdutosBody">
+                                    <tr><td colspan="7" class="text-center">Nenhum produto cadastrado.</td></tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="form-group">
-                            <label for="unidadeNome">Nome Completo da Unidade</label>
-                            <input type="text" id="unidadeNome" placeholder="Ex: POA1 PORTO ALEGRE - RS" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <button type="submit" class="btn-primary">Cadastrar Unidade</button>
-                        </div>
-                    </form>
+                    </div>
+                </section>
 
-                    <h4 class="sub-title">Unidades Cadastradas</h4>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Nome da Unidade</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelaUnidadesBody"></tbody>
-                        </table>
+                <!-- TELA 4: HISTÓRICO DE MOVIMENTAÇÕES -->
+                <section id="historicoSection" class="app-section oculto">
+                    <div class="card">
+                        <h3>Histórico de Movimentações</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data/Hora</th>
+                                        <th>Produto</th>
+                                        <th>Tipo</th>
+                                        <th>Quantidade</th>
+                                        <th>Usuário</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaHistoricoBody">
+                                    <tr><td colspan="5" class="text-center">Nenhuma movimentação registrada.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TELA 5: GESTÃO DE USUÁRIOS -->
+                <section id="usuariosSection" class="app-section oculto">
+                    <div class="card section-margin">
+                        <h3 id="usrFormTitulo">Cadastrar Novo Usuário</h3>
+                        <form id="usuarioForm" class="form-grid">
+                            <input type="hidden" id="usrEditingMatricula" value="">
+                            <div class="form-group">
+                                <label for="usrNomeCompleto">Nome Completo</label>
+                                <input type="text" id="usrNomeCompleto" placeholder="Ex: João da Silva" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="usrCpf">CPF (Apenas números ou formatado)</label>
+                                <input type="text" id="usrCpf" placeholder="000.000.000-00" oninput="atualizarMatriculaPreview(this.value)" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="usrMatricula">Matrícula (6 primeiros dígitos do CPF)</label>
+                                <input type="text" id="usrMatricula" readonly placeholder="Gerado automaticamente" class="input-readonly">
+                            </div>
+                            <div class="form-group">
+                                <label for="usrEmail">E-mail</label>
+                                <input type="email" id="usrEmail" placeholder="joao@empresa.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="usrSenha">Senha</label>
+                                <input type="password" id="usrSenha" placeholder="Digite a senha (deixe em branco se não quiser alterar ao editar)">
+                            </div>
+                            <div class="form-group">
+                                <label for="usrCargo">Cargo / Permissão</label>
+                                <select id="usrCargo" required></select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Unidades Permitidas (Selecione uma ou mais):</label>
+                                <div id="usrUnidadesContainer" class="checkbox-group-grid"></div>
+                            </div>
+                            <div class="form-group full-width btn-group-flex">
+                                <button type="submit" id="usrBtnSubmit" class="btn-primary">Cadastrar Usuário</button>
+                                <button type="button" id="usrBtnCancelar" class="btn-secondary oculto" onclick="cancelarEdicaoUsuario()">Cancelar Edição</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3>Usuários Cadastrados</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Matrícula</th>
+                                        <th>Nome</th>
+                                        <th>CPF</th>
+                                        <th>E-mail</th>
+                                        <th>Cargo</th>
+                                        <th>Unidades Vinculadas</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaUsuariosBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TELA 6: GESTÃO DE CARGOS E PERMISSÕES -->
+                <section id="cargosSection" class="app-section oculto">
+                    <div class="card section-margin">
+                        <h3>Cargos e Permissões</h3>
+                        <form id="cargoForm" class="form-grid">
+                            <div class="form-group">
+                                <label for="cargoNome">Nome do Cargo</label>
+                                <input type="text" id="cargoNome" placeholder="Ex: Gerente de Estoque" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Permissões do Cargo:</label>
+                                <div class="checkbox-group">
+                                    <label><input type="checkbox" id="permMovimentar" checked> Movimentar Estoque (+ / -)</label>
+                                    <label><input type="checkbox" id="permCadastrarProd" checked> Cadastrar/Excluir Produtos</label>
+                                    <label><input type="checkbox" id="permGerenciarAdmin"> Acesso ao Painel Administrativo</label>
+                                </div>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-primary">Salvar Cargo</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3>Cargos Existentes</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Cargo</th>
+                                        <th>Permissões</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaCargosBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TELA 7: GESTÃO DE UNIDADES -->
+                <section id="unidadesSection" class="app-section oculto">
+                    <div class="card section-margin">
+                        <h3>Gerenciamento de Unidades</h3>
+                        <form id="unidadeForm" class="form-grid">
+                            <div class="form-group">
+                                <label for="unidadeCodigo">Código da Unidade</label>
+                                <input type="text" id="unidadeCodigo" placeholder="Ex: POA1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="unidadeNome">Nome Completo da Unidade</label>
+                                <input type="text" id="unidadeNome" placeholder="Ex: POA1 PORTO ALEGRE - RS" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-primary">Cadastrar Unidade</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3>Unidades Cadastradas</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome da Unidade</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaUnidadesBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
             </main>
