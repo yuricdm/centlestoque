@@ -30,7 +30,7 @@ function resetarDadosSistema() {
 }
 
 // ==========================================================================
-// 2. SISTEMA DE TOAST E MODAL
+// 2. NOTIFICAÇÕES E MODAL
 // ==========================================================================
 
 function exibirToast(mensagem, tipo = 'info') {
@@ -85,7 +85,7 @@ function fecharModal(confirmado) {
 }
 
 // ==========================================================================
-// 3. ESTADOS E BANCO DE DADOS LOCAL
+// 3. BANCO DE DADOS LOCAL E ESTADOS
 // ==========================================================================
 
 const UNIDADES_PADRAO = [{ id: "SRS1", nome: "SRS1 PORTO ALEGRE - RS" }];
@@ -110,7 +110,7 @@ function salvarTudo() {
 }
 
 // ==========================================================================
-// 4. AUTENTICAÇÃO E NAVEGAÇÃO
+// 4. AUTENTICAÇÃO E TRANSIÇÃO DE TELA
 // ==========================================================================
 
 async function realizarLogin(e) {
@@ -147,8 +147,13 @@ async function realizarLogin(e) {
 }
 
 function iniciarSessao() {
-    document.getElementById("loginArea").classList.add("oculto");
-    document.getElementById("mainArea").classList.remove("oculto");
+    // Esconde a tela de login e exibe a tela do app
+    const loginArea = document.getElementById("loginArea");
+    const mainArea = document.getElementById("mainArea");
+
+    if (loginArea) loginArea.classList.add("oculto");
+    if (mainArea) mainArea.classList.remove("oculto");
+
     atualizarInterface();
 }
 
@@ -158,7 +163,7 @@ function encerrarSessao() {
 }
 
 // ==========================================================================
-// 5. REGRA DE NEGÓCIO: PRODUTOS E MOVIMENTAÇÕES
+// 5. PRODUTOS E MOVIMENTAÇÕES
 // ==========================================================================
 
 function cadastrarProduto(e) {
@@ -241,14 +246,13 @@ async function removerProduto(id) {
 }
 
 // ==========================================================================
-// 6. RENDERIZAÇÃO DA INTERFACE
+// 6. RENDERIZAÇÃO
 // ==========================================================================
 
 function atualizarInterface() {
     if (usuarioLogado) document.getElementById("usuarioNomeLogado").textContent = usuarioLogado.nome;
     if (unidadeSelecionada) document.getElementById("unidadeNomeAtual").textContent = unidadeSelecionada.nome;
 
-    // Métricas do Dashboard
     const totalItens = produtos.length;
     const itensAlerta = produtos.filter(p => p.quantidade <= p.minimo).length;
     const totalEstoque = produtos.reduce((acc, p) => acc + p.quantidade, 0);
@@ -257,7 +261,6 @@ function atualizarInterface() {
     document.getElementById("statItensAlerta").textContent = itensAlerta;
     document.getElementById("statTotalEstoque").textContent = totalEstoque;
 
-    // Tabela de Produtos
     const tbodyProd = document.getElementById("tabelaProdutosBody");
     tbodyProd.innerHTML = "";
 
@@ -284,7 +287,6 @@ function atualizarInterface() {
         });
     }
 
-    // Tabela de Histórico
     const tbodyHist = document.getElementById("tabelaHistoricoBody");
     tbodyHist.innerHTML = "";
 
@@ -306,7 +308,7 @@ function atualizarInterface() {
 }
 
 // ==========================================================================
-// 7. EVENT LISTENERS
+// 7. INICIALIZAÇÃO
 // ==========================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
