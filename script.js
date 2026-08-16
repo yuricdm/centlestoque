@@ -1,8 +1,7 @@
 // ==========================================================================
-// 1. SEGURANÇA & UTILITÁRIOS (HASH COMPATÍVEL E SANITIZAÇÃO)
+// 1. UTILITÁRIOS E SEGURANÇA
 // ==========================================================================
 
-// Hash SHA-256 com Fallback Base64 (roda em localhost, HTTPS ou file://)
 async function gerarHashSenha(senha) {
     if (window.crypto && crypto.subtle) {
         try {
@@ -12,19 +11,18 @@ async function gerarHashSenha(senha) {
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         } catch (e) {
-            console.warn("SubtleCrypto indisponível no ambiente local. Usando fallback.");
+            console.warn("SubtleCrypto indisponível. Usando fallback.");
         }
     }
     return btoa(senha);
 }
 
-function sanitizar(string) {
+function sanitizar(str) {
     const temp = document.createElement('div');
-    temp.textContent = string;
+    temp.textContent = str;
     return temp.innerHTML;
 }
 
-// Reset rápido para resolver conflitos de dados antigos no localStorage
 function resetarDadosSistema() {
     localStorage.clear();
     sessionStorage.clear();
@@ -32,7 +30,7 @@ function resetarDadosSistema() {
 }
 
 // ==========================================================================
-// 2. SISTEMA DE NOTIFICAÇÕES (TOAST) E MODAL CUSTOMIZADO
+// 2. SISTEMA DE TOAST E MODAL
 // ==========================================================================
 
 function exibirToast(mensagem, tipo = 'info') {
@@ -43,7 +41,7 @@ function exibirToast(mensagem, tipo = 'info') {
     toast.textContent = mensagem;
 
     container.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
+    setTimeout(() => toast.remove(), 3500);
 }
 
 let resolverModal = null;
@@ -52,42 +50,33 @@ function exibirModal({ titulo, mensagem, comInput = false, inputLabel = "" }) {
     return new Promise((resolve) => {
         resolverModal = resolve;
 
-        const elTitulo = document.getElementById("modalTitulo");
-        const elMensagem = document.getElementById("modalMensagem");
-        if (elTitulo) elTitulo.textContent = titulo;
-        if (elMensagem) elMensagem.textContent = mensagem;
+        document.getElementById("modalTitulo").textContent = titulo;
+        document.getElementById("modalMensagem").textContent = mensagem;
 
         const inputContainer = document.getElementById("modalInputContainer");
         const inputField = document.getElementById("modalInput");
 
-        if (inputContainer && inputField) {
-            if (comInput) {
-                inputContainer.classList.remove("oculto");
-                const label = document.getElementById("modalInputLabel");
-                if (label) label.textContent = inputLabel;
-                inputField.value = "";
-            } else {
-                inputContainer.classList.add("oculto");
-            }
+        if (comInput) {
+            inputContainer.classList.remove("oculto");
+            document.getElementById("modalInputLabel").textContent = inputLabel;
+            inputField.value = "1";
+        } else {
+            inputContainer.classList.add("oculto");
         }
 
-        const modal = document.getElementById("modalCustom");
-        if (modal) modal.classList.remove("oculto");
+        document.getElementById("modalCustom").classList.remove("oculto");
     });
 }
 
 function fecharModal(confirmado) {
-    const modal = document.getElementById("modalCustom");
-    if (modal) modal.classList.add("oculto");
+    document.getElementById("modalCustom").classList.add("oculto");
 
     if (resolverModal) {
-        const inputContainer = document.getElementById("modalInputContainer");
-        const comInput = inputContainer && !inputContainer.classList.contains("oculto");
-        const inputField = document.getElementById("modalInput");
-        const valorInput = inputField ? inputField.value.trim() : "";
+        const comInput = !document.getElementById("modalInputContainer").classList.contains("oculto");
+        const valorInput = parseInt(document.getElementById("modalInput").value, 10);
 
         if (comInput) {
-            resolverModal(confirmado ? valorInput : null);
+            resolverModal(confirmado ? (isNaN(valorInput) ? 0 : valorInput) : null);
         } else {
             resolverModal(confirmado);
         }
@@ -96,85 +85,48 @@ function fecharModal(confirmado) {
 }
 
 // ==========================================================================
-// 3. BANCO DE DADOS E ESTADOS INICIAIS
+// 3. ESTADOS E BANCO DE DADOS LOCAL
 // ==========================================================================
 
-const UNIDADES_PADRAO = [
-    { id: "SRS1", nome: "SRS1 PORTO ALEGRE - RS" },
-    { id: "SRS2", nome: "SRS2 PELOTAS - RS" },
-    { id: "SRS3", nome: "SRS3 CAXIAS DO SUL - RS" },
-    { id: "SRS4", nome: "SRS4 SANTA MARIA - RS" }
-];
-
-const CARGOS_PADRAO = [
-    {
-        id: "admin",
-        nome: "Administrador Master",
-        permissoes: ["ver_dashboard", "cadastrar_produto", "editar_produto", "movimentar_direto", "aprovar_pendencias", "gerenciar_usuarios", "gerenciar_cargos", "exportar_excel"]
-    },
-    {
-        id: "coordenador",
-        nome: "Coordenador Geral",
-        permissoes: ["ver_dashboard", "cadastrar_produto", "editar_produto", "movimentar_direto", "aprovar_pendencias", "gerenciar_usuarios", "exportar_excel"]
-    },
-    {
-        id: "supervisor",
-        nome: "Supervisor de Unidade",
-        permissoes: ["ver_dashboard", "cadastrar_produto", "editar_produto", "movimentar_direto", "aprovar_pendencias", "exportar_excel"]
-    },
-    {
-        id: "tecnico",
-        nome: "Técnico Operacional",
-        permissoes: ["cadastrar_produto"]
-    }
-];
-
-// Hash SHA-256 e Base64 da senha "1234"
+const UNIDADES_PADRAO = [{ id: "SRS1", nome: "SRS1 PORTO ALEGRE - RS" }];
 const HASH_1234_SHA = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4";
 const HASH_1234_B64 = "MTIzNA==";
 
 const USUARIOS_PADRAO = [
-    { login: "admin", email: "admin@empresa.com", senhaHash: HASH_1234_SHA, senhaB64: HASH_1234_B64, perfil: "admin", nome: "Admin Master", unidadeId: "TODAS" },
-    { login: "coordenador", email: "coordenador@empresa.com", senhaHash: HASH_1234_SHA, senhaB64: HASH_1234_B64, perfil: "coordenador", nome: "Coordenador Geral", unidadeId: "TODAS" },
-    { login: "supervisor", email: "supervisor@empresa.com", senhaHash: HASH_1234_SHA, senhaB64: HASH_1234_B64, perfil: "supervisor", nome: "Supervisor Pelotas", unidadeId: "SRS2" },
-    { login: "tecnico", email: "tecnico@empresa.com", senhaHash: HASH_1234_SHA, senhaB64: HASH_1234_B64, perfil: "tecnico", nome: "Técnico Silva", unidadeId: "SRS2" }
+    { login: "admin", senhaHash: HASH_1234_SHA, senhaB64: HASH_1234_B64, nome: "Admin Master", unidadeId: "SRS1" }
 ];
 
 let unidades = JSON.parse(localStorage.getItem("unidades")) || UNIDADES_PADRAO;
-let cargos = JSON.parse(localStorage.getItem("cargos")) || CARGOS_PADRAO;
 let usuarios = JSON.parse(localStorage.getItem("usuarios")) || USUARIOS_PADRAO;
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 let movimentacoes = JSON.parse(localStorage.getItem("movimentacoes")) || [];
-let pendencias = JSON.parse(localStorage.getItem("pendencias")) || [];
 
-// ESTADOS DA SESSÃO
 let usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado")) || null;
 let unidadeSelecionada = JSON.parse(sessionStorage.getItem("unidadeSelecionada")) || null;
 
+function salvarTudo() {
+    localStorage.setItem("produtos", JSON.stringify(produtos));
+    localStorage.setItem("movimentacoes", JSON.stringify(movimentacoes));
+}
+
 // ==========================================================================
-// 4. AUTENTICAÇÃO E CONTROLE DE TELA
+// 4. AUTENTICAÇÃO E NAVEGAÇÃO
 // ==========================================================================
 
 async function realizarLogin(e) {
-    if (e && e.preventDefault) e.preventDefault(); // Impede o reload da página pelo formulário
+    if (e && e.preventDefault) e.preventDefault();
 
-    const usuarioInput = document.getElementById("usuarioInput");
-    const senhaInput = document.getElementById("senhaInput");
-
-    if (!usuarioInput || !senhaInput) return;
-
-    const usuarioVal = usuarioInput.value.trim().toLowerCase();
-    const senhaVal = senhaInput.value.trim();
+    const usuarioVal = document.getElementById("usuarioInput").value.trim().toLowerCase();
+    const senhaVal = document.getElementById("senhaInput").value.trim();
 
     if (!usuarioVal || !senhaVal) {
-        exibirToast("Informe seu usuário e senha.", "alerta");
+        exibirToast("Informe usuário e senha.", "alerta");
         return;
     }
 
     const hashForm = await gerarHashSenha(senhaVal);
     const b64Form = btoa(senhaVal);
 
-    // Valida com compatibilidade para senhas salvas em SHA-256, Base64 ou Texto Puro
     const conta = usuarios.find(u => 
         u.login.toLowerCase() === usuarioVal && 
         (u.senhaHash === hashForm || u.senhaB64 === b64Form || u.senha === senhaVal || u.senhaHash === HASH_1234_SHA)
@@ -184,81 +136,183 @@ async function realizarLogin(e) {
         usuarioLogado = conta;
         sessionStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
 
-        unidadeSelecionada = conta.unidadeId !== "TODAS"
-            ? (unidades.find(u => u.id === conta.unidadeId) || unidades[0])
-            : unidades[0];
-
+        unidadeSelecionada = unidades.find(u => u.id === conta.unidadeId) || unidades[0];
         sessionStorage.setItem("unidadeSelecionada", JSON.stringify(unidadeSelecionada));
-        
+
         exibirToast(`Bem-vindo, ${sanitizar(conta.nome)}!`, "sucesso");
         iniciarSessao();
     } else {
-        exibirModal({
-            titulo: "Acesso Negado",
-            mensagem: "Usuário ou senha incorretos."
-        });
+        exibirModal({ titulo: "Acesso Negado", mensagem: "Usuário ou senha incorretos." });
     }
 }
 
 function iniciarSessao() {
-    // 1. Oculta a área/container de Login
-    const loginArea = document.getElementById("loginArea") || document.getElementById("loginContainer");
-    if (loginArea) loginArea.classList.add("oculto");
-
-    // 2. Exibe a área principal da aplicação
-    const mainArea = document.getElementById("mainArea") || document.getElementById("appContainer");
-    if (mainArea) mainArea.classList.remove("oculto");
-
-    // 3. Atualiza os dados exibidos no topo/dashboard
+    document.getElementById("loginArea").classList.add("oculto");
+    document.getElementById("mainArea").classList.remove("oculto");
     atualizarInterface();
 }
 
 function encerrarSessao() {
-    sessionStorage.removeItem("usuarioLogado");
-    sessionStorage.removeItem("unidadeSelecionada");
-    usuarioLogado = null;
-    unidadeSelecionada = null;
-    
-    // Recarrega a página para voltar ao estado de login zerado
+    sessionStorage.clear();
     location.reload();
 }
 
-function atualizarInterface() {
-    // Atualiza nome do usuário logado no topo
-    const elUsuario = document.getElementById("usuarioNomeLogado") || document.getElementById("nomeUsuario");
-    if (elUsuario && usuarioLogado) {
-        elUsuario.textContent = usuarioLogado.nome;
+// ==========================================================================
+// 5. REGRA DE NEGÓCIO: PRODUTOS E MOVIMENTAÇÕES
+// ==========================================================================
+
+function cadastrarProduto(e) {
+    e.preventDefault();
+
+    const nome = document.getElementById("prodNome").value.trim();
+    const categoria = document.getElementById("prodCategoria").value.trim();
+    const quantidade = parseInt(document.getElementById("prodQuantidade").value, 10);
+    const minimo = parseInt(document.getElementById("prodMinimo").value, 10);
+
+    const novoProduto = {
+        id: Date.now(),
+        nome,
+        categoria,
+        quantidade,
+        minimo
+    };
+
+    produtos.push(novoProduto);
+
+    movimentacoes.unshift({
+        data: new Date().toLocaleString("pt-BR"),
+        produto: nome,
+        tipo: "Criação",
+        quantidade: quantidade,
+        usuario: usuarioLogado.nome
+    });
+
+    salvarTudo();
+    document.getElementById("produtoForm").reset();
+    exibirToast("Produto cadastrado com sucesso!", "sucesso");
+    atualizarInterface();
+}
+
+async function movimentarEstoque(id, tipo) {
+    const produto = produtos.find(p => p.id === id);
+    if (!produto) return;
+
+    const qtd = await exibirModal({
+        titulo: `${tipo === 'Entrada' ? 'Adicionar' : 'Remover'} Estoque`,
+        mensagem: `Informe a quantidade para ${tipo.toLowerCase()} no item "${produto.nome}":`,
+        comInput: true,
+        inputLabel: "Quantidade:"
+    });
+
+    if (!qtd || qtd <= 0) return;
+
+    if (tipo === 'Saída' && produto.quantidade < qtd) {
+        exibirToast("Estoque insuficiente para esta saída.", "erro");
+        return;
     }
 
-    // Atualiza nome da unidade selecionada
-    const elUnidade = document.getElementById("unidadeNomeAtual") || document.getElementById("nomeUnidade");
-    if (elUnidade && unidadeSelecionada) {
-        elUnidade.textContent = unidadeSelecionada.nome;
-    }
+    produto.quantidade += (tipo === 'Entrada' ? qtd : -qtd);
 
-    // Se houver funções adicionais de renderizar tabelas, chama-as aqui se existirem
-    if (typeof renderizarProdutos === "function") renderizarProdutos();
-    if (typeof renderizarDashboard === "function") renderizarDashboard();
+    movimentacoes.unshift({
+        data: new Date().toLocaleString("pt-BR"),
+        produto: produto.nome,
+        tipo,
+        quantidade: qtd,
+        usuario: usuarioLogado.nome
+    });
+
+    salvarTudo();
+    exibirToast("Estoque atualizado!", "sucesso");
+    atualizarInterface();
+}
+
+async function removerProduto(id) {
+    const confirmado = await exibirModal({
+        titulo: "Excluir Produto",
+        mensagem: "Tem certeza que deseja remover este produto?"
+    });
+
+    if (confirmado) {
+        produtos = produtos.filter(p => p.id !== id);
+        salvarTudo();
+        exibirToast("Produto removido.", "alerta");
+        atualizarInterface();
+    }
 }
 
 // ==========================================================================
-// 5. INICIALIZAÇÃO E EVENT LISTENERS DO SISTEMA
+// 6. RENDERIZAÇÃO DA INTERFACE
+// ==========================================================================
+
+function atualizarInterface() {
+    if (usuarioLogado) document.getElementById("usuarioNomeLogado").textContent = usuarioLogado.nome;
+    if (unidadeSelecionada) document.getElementById("unidadeNomeAtual").textContent = unidadeSelecionada.nome;
+
+    // Métricas do Dashboard
+    const totalItens = produtos.length;
+    const itensAlerta = produtos.filter(p => p.quantidade <= p.minimo).length;
+    const totalEstoque = produtos.reduce((acc, p) => acc + p.quantidade, 0);
+
+    document.getElementById("statTotalProdutos").textContent = totalItens;
+    document.getElementById("statItensAlerta").textContent = itensAlerta;
+    document.getElementById("statTotalEstoque").textContent = totalEstoque;
+
+    // Tabela de Produtos
+    const tbodyProd = document.getElementById("tabelaProdutosBody");
+    tbodyProd.innerHTML = "";
+
+    if (produtos.length === 0) {
+        tbodyProd.innerHTML = `<tr><td colspan="7" class="text-center">Nenhum produto cadastrado.</td></tr>`;
+    } else {
+        produtos.forEach(p => {
+            const emAlerta = p.quantidade <= p.minimo;
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>#${p.id.toString().slice(-4)}</td>
+                <td><strong>${sanitizar(p.nome)}</strong></td>
+                <td>${sanitizar(p.categoria)}</td>
+                <td>${p.quantidade}</td>
+                <td>${p.minimo}</td>
+                <td><span class="badge ${emAlerta ? 'badge-alerta' : 'badge-ok'}">${emAlerta ? 'Alerta' : 'OK'}</span></td>
+                <td>
+                    <button class="btn-primary btn-action" onclick="movimentarEstoque(${p.id}, 'Entrada')">+</button>
+                    <button class="btn-secondary btn-action" onclick="movimentarEstoque(${p.id}, 'Saída')">-</button>
+                    <button class="btn-danger btn-action" onclick="removerProduto(${p.id})">&times;</button>
+                </td>
+            `;
+            tbodyProd.appendChild(tr);
+        });
+    }
+
+    // Tabela de Histórico
+    const tbodyHist = document.getElementById("tabelaHistoricoBody");
+    tbodyHist.innerHTML = "";
+
+    if (movimentacoes.length === 0) {
+        tbodyHist.innerHTML = `<tr><td colspan="5" class="text-center">Nenhuma movimentação registrada.</td></tr>`;
+    } else {
+        movimentacoes.slice(0, 10).forEach(m => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${m.data}</td>
+                <td>${sanitizar(m.produto)}</td>
+                <td>${m.tipo}</td>
+                <td>${m.quantidade}</td>
+                <td>${sanitizar(m.usuario)}</td>
+            `;
+            tbodyHist.appendChild(tr);
+        });
+    }
+}
+
+// ==========================================================================
+// 7. EVENT LISTENERS
 // ==========================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Liga o formulário de login ao submit para evitar reload
-    const formLogin = document.getElementById("loginForm") || document.querySelector("form");
-    if (formLogin) {
-        formLogin.addEventListener("submit", realizarLogin);
-    }
+    document.getElementById("loginForm").addEventListener("submit", realizarLogin);
+    document.getElementById("produtoForm").addEventListener("submit", cadastrarProduto);
 
-    // Liga o botão de entrar se existir separado
-    const btnLogin = document.getElementById("btnLogin") || document.getElementById("btnEntrar");
-    if (btnLogin) {
-        btnLogin.addEventListener("click", realizarLogin);
-    }
-
-    // Se já estiver logado na sessão ativa, carrega direto a interface principal
     if (usuarioLogado) {
         iniciarSessao();
     }
