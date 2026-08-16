@@ -1,18 +1,11 @@
-/* ==========================================================================
-   1. ESTADO GLOBAL DA APLICAÇÃO (DADOS EM MEMÓRIA / SIMULAÇÃO)
-   ========================================================================== */
+/* ESTADO GLOBAL DA APLICAÇÃO */
 const EstadoApp = {
     usuarioLogado: null,
     unidadeAtual: 'Unidade Pelotas - Centro',
-    unidadesDisponiveis: [
-        'Unidade Pelotas - Centro',
-        'Unidade Porto Alegre - ZN',
-        'Depósito Central - Caxias'
-    ],
     produtos: [
         { id: 101, sku: 'EAN-78901', nome: 'Caixa de Papelão P', categoria: 'Embalagens', qtd: 450, min: 100, preco: 2.50, unidade: 'Unidade Pelotas - Centro' },
-        { id: 102, sku: 'EAN-78902', nome: 'Fita Adesiva 45mmx50m', categoria: 'Suprimentos', qtd: 12, min: 30, preco: 8.90, unidade: 'Unidade Pelotas - Centro' }, // Alerta
-        { id: 103, sku: 'EAN-78903', nome: 'Plástico Bolha 100m', categoria: 'Embalagens', qtd: 8, min: 15, preco: 75.00, unidade: 'Unidade Pelotas - Centro' },   // Alerta
+        { id: 102, sku: 'EAN-78902', nome: 'Fita Adesiva 45mmx50m', categoria: 'Suprimentos', qtd: 12, min: 30, preco: 8.90, unidade: 'Unidade Pelotas - Centro' },
+        { id: 103, sku: 'EAN-78903', nome: 'Plástico Bolha 100m', categoria: 'Embalagens', qtd: 8, min: 15, preco: 75.00, unidade: 'Unidade Pelotas - Centro' },
         { id: 104, sku: 'EAN-78904', nome: 'Etiqueta Térmica 100x150', categoria: 'Identificação', qtd: 120, min: 50, preco: 32.00, unidade: 'Unidade Porto Alegre - ZN' }
     ],
     historicoMovimentacoes: [
@@ -24,30 +17,23 @@ const EstadoApp = {
     ]
 };
 
-/* ==========================================================================
-   2. CONTROLE DE NAVEGAÇÃO ENTRE TELAS
-   ========================================================================== */
+/* CONTROLE DE NAVEGAÇÃO */
 function navegarPara(idTela) {
-    // Esconde todas as seções
     const secoes = document.querySelectorAll('main > section');
     secoes.forEach(secao => secao.classList.add('oculto'));
 
-    // Exibe a seção solicitada
     const telaDestino = document.getElementById(`tela-${idTela}`);
     if (telaDestino) {
         telaDestino.classList.remove('oculto');
     }
 
-    // Atualiza dados específicos conforme a tela acessada
     if (idTela === 'dashboard') atualizarDashboardGeral();
     if (idTela === 'produtos') renderizarTabelaProdutos();
     if (idTela === 'historico') renderizarHistorico();
     if (idTela === 'pendencias') renderizarPendencias();
 }
 
-/* ==========================================================================
-   3. AUTENTICAÇÃO E LOGIN
-   ========================================================================== */
+/* AUTENTICAÇÃO */
 function realizarLogin(event) {
     event.preventDefault();
     const usuarioInput = document.getElementById('usuario').value.trim();
@@ -58,15 +44,12 @@ function realizarLogin(event) {
         return;
     }
 
-    // Simulação de login
     EstadoApp.usuarioLogado = {
         nome: usuarioInput,
         perfil: usuarioInput.toLowerCase() === 'admin' ? 'Administrador' : 'Operador'
     };
 
     alert(`Login efetuado com sucesso! Bem-vindo, ${EstadoApp.usuarioLogado.nome}.`);
-    
-    // Mostra o menu de navegação e redireciona para o Dashboard Geral
     document.getElementById('menu-navegacao').classList.remove('oculto');
     navegarPara('dashboard');
 }
@@ -85,44 +68,28 @@ function recuperarSenha(event) {
     navegarPara('login');
 }
 
-/* ==========================================================================
-   4. DASHBOARD GERAL E CONSOLIDADO (MÉTRICAS E KPIS)
-   ========================================================================== */
+/* DASHBOARD GERAL */
 function atualizarDashboardGeral() {
-    // Cálculo do valor total em estoque
     const valorTotal = EstadoApp.produtos.reduce((acc, item) => acc + (item.qtd * item.preco), 0);
-    
-    // Contagem de SKUs cadastrados
     const totalSKUs = EstadoApp.produtos.length;
-    
-    // Identificação de alertas críticos (Estoque <= Mínimo)
     const alertas = EstadoApp.produtos.filter(item => item.qtd <= item.min).length;
-    
-    // Total de pendências
     const totalPendencias = EstadoApp.pendencias.length;
 
-    // Atualiza os elementos na interface caso existam na página
-    const elValor = document.getElementById('kpi-valor');
-    const elItens = document.getElementById('kpi-itens');
-    const elAlertas = document.getElementById('kpi-alertas');
-    const elPendencias = document.getElementById('kpi-pendentes');
-
-    if (elValor) elValor.innerText = valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    if (elItens) elItens.innerText = `${totalSKUs} SKUs`;
-    if (elAlertas) elAlertas.innerText = `${alertas} Itens`;
-    if (elPendencias) elPendencias.innerText = `${totalPendencias} Requisições`;
+    document.getElementById('kpi-valor').innerText = valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('kpi-itens').innerText = `${totalSKUs} SKUs`;
+    document.getElementById('kpi-alertas').innerText = `${alertas} Itens`;
+    document.getElementById('kpi-pendentes').innerText = `${totalPendencias} Requisições`;
+    document.getElementById('badge-pendencias').innerText = totalPendencias;
 }
 
-/* ==========================================================================
-   5. GESTÃO DE PRODUTOS E TABELAS
-   ========================================================================== */
-function renderizarTabelaProdutos() {
+/* PRODUTOS */
+function renderizarTabelaProdutos(lista = EstadoApp.produtos) {
     const corpoTabela = document.getElementById('tabela-produtos-corpo');
     if (!corpoTabela) return;
 
     corpoTabela.innerHTML = '';
 
-    EstadoApp.produtos.forEach(produto => {
+    lista.forEach(produto => {
         const emAlerta = produto.qtd <= produto.min;
         const tr = document.createElement('tr');
         
@@ -169,9 +136,15 @@ function cadastrarNovoProduto(event) {
     atualizarDashboardGeral();
 }
 
-/* ==========================================================================
-   6. MOVIMENTAÇÕES E HISTÓRICO
-   ========================================================================== */
+function filtrarProdutos() {
+    const termo = document.getElementById('busca-produto').value.toLowerCase();
+    const filtrados = EstadoApp.produtos.filter(p => 
+        p.nome.toLowerCase().includes(termo) || p.sku.toLowerCase().includes(termo)
+    );
+    renderizarTabelaProdutos(filtrados);
+}
+
+/* MOVIMENTAÇÕES */
 function registrarMovimento(idProduto, tipo) {
     const produto = EstadoApp.produtos.find(p => p.id === idProduto);
     if (!produto) return;
@@ -185,19 +158,16 @@ function registrarMovimento(idProduto, tipo) {
     }
 
     if (tipo === 'Saída' && produto.qtd < quantidade) {
-        alert('Estoque insuficiente para essa saída!');
+        alert('Estoque insuficiente!');
         return;
     }
 
-    // Atualiza a quantidade do produto
     if (tipo === 'Entrada') produto.qtd += quantidade;
     if (tipo === 'Saída') produto.qtd -= quantidade;
 
-    // Registra no histórico
-    const dataAtual = new Date().toLocaleString('pt-BR');
     EstadoApp.historicoMovimentacoes.unshift({
         id: Date.now(),
-        data: dataAtual,
+        data: new Date().toLocaleString('pt-BR'),
         produto: produto.nome,
         tipo: tipo,
         qtd: quantidade,
@@ -205,7 +175,7 @@ function registrarMovimento(idProduto, tipo) {
         unidade: produto.unidade
     });
 
-    alert(`Movimentação de ${tipo} registrada! Novo saldo: ${produto.qtd}`);
+    alert(`Movimentação registrada com sucesso! Novo saldo: ${produto.qtd}`);
     renderizarTabelaProdutos();
     atualizarDashboardGeral();
 }
@@ -220,7 +190,7 @@ function renderizarHistorico() {
         tr.innerHTML = `
             <td>${mov.data}</td>
             <td>${mov.produto}</td>
-            <td><span class="badge-${mov.tipo.toLowerCase()}">${mov.tipo}</span></td>
+            <td><strong>${mov.tipo}</strong></td>
             <td>${mov.qtd}</td>
             <td>${mov.usuario}</td>
             <td>${mov.unidade}</td>
@@ -229,21 +199,23 @@ function renderizarHistorico() {
     });
 }
 
+/* PENDÊNCIAS */
 function renderizarPendencias() {
     const elLista = document.getElementById('lista-pendencias');
     if (!elLista) return;
 
     if (EstadoApp.pendencias.length === 0) {
-        elLista.innerHTML = '<p>Nenhuma pendência para aprovação.</p>';
+        elLista.innerHTML = '<p>Nenhuma pendência pendente de aprovação.</p>';
         return;
     }
 
     elLista.innerHTML = EstadoApp.pendencias.map(p => `
-        <div class="card-pendencia">
+        <div class="card">
             <p><strong>Solicitante:</strong> ${p.solicitante}</p>
-            <p><strong>Item:</strong> ${p.produto} (${p.qtd} uni)</p>
-            <p><strong>Ação:</strong> ${p.tipo}</p>
-            <button onclick="aprovarPendencia(${p.id})" class="btn-sm btn-sucesso">Aprovar</button>
+            <p><strong>Produto:</strong> ${p.produto} (${p.qtd} uni)</p>
+            <p><strong>Tipo:</strong> ${p.tipo}</p>
+            <br>
+            <button onclick="aprovarPendencia(${p.id})" class="btn-sm btn-sucesso">Aprovar Solicitação</button>
         </div>
     `).join('');
 }
@@ -255,10 +227,6 @@ function aprovarPendencia(idPendencia) {
     atualizarDashboardGeral();
 }
 
-/* ==========================================================================
-   7. INICIALIZAÇÃO DO SISTEMA
-   ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-    // Inicializa a tela de login
     navegarPara('login');
 });
