@@ -58,14 +58,14 @@
         
         <!-- SIDEBAR (MENU LATERAL) -->
         <aside id="sidebar" class="sidebar fechada">
-            <button id="toggleSidebar" class="btn-toggle-sidebar" onclick="alternarSidebar()">
+            <button id="toggleSidebar" class="btn-toggle-sidebar" onclick="alternarSidebar()" aria-label="Alternar Menu">
                 <span id="iconSidebar">&#x2630;</span>
             </button>
             <div class="sidebar-content">
                 <h3>Navegação</h3>
                 <nav class="sidebar-nav">
                     <a href="#" onclick="navegarPara('dashSection')" class="nav-link active">Dashboard</a>
-                    <a href="#" onclick="navegarPara('cadastroSection')" class="nav-link">Cadastrar Produto</a>
+                    <a href="#" id="linkCadastrarProd" onclick="navegarPara('cadastroSection')" class="nav-link">Cadastrar Produto</a>
                     <a href="#" onclick="navegarPara('produtosSection')" class="nav-link">Estoque</a>
                     <a href="#" onclick="navegarPara('historicoSection')" class="nav-link">Histórico</a>
                     
@@ -92,7 +92,7 @@
             </header>
 
             <main class="content">
-                <!-- SELETOR DE UNIDADE ATIVA (VISÍVEL EM TODAS AS TELAS DA APLICAÇÃO) -->
+                <!-- SELETOR DE UNIDADE ATIVA -->
                 <div class="card section-margin">
                     <div class="unidade-selector-container">
                         <label for="unidadeSelect"><strong>Unidade Ativa:</strong></label>
@@ -218,7 +218,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="usrSenha">Senha</label>
-                                <input type="password" id="usrSenha" placeholder="Digite a senha (deixe em branco se não quiser alterar ao editar)">
+                                <input type="password" id="usrSenha" placeholder="Digite a senha">
                             </div>
                             <div class="form-group">
                                 <label for="usrCargo">Cargo / Permissão</label>
