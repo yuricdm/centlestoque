@@ -1,11 +1,9 @@
-// --- ESTADO DA APLICAÇÃO ---
 let usuarios = [];
 let cargos = [];
 let unidades = [];
 let produtos = [];
 let usuarioLogado = null;
 
-// --- UTILITÁRIOS E CRIPTOGRAFIA ---
 async function gerarHashSenha(senha) {
     const encoder = new TextEncoder();
     const data = encoder.encode(senha);
@@ -23,7 +21,6 @@ function exibirToast(mensagem, tipo = 'sucesso') {
     setTimeout(() => toast.remove(), 3500);
 }
 
-// --- INICIALIZAÇÃO E DADOS INICIAIS ---
 async function init() {
     carregarDadosStorage();
 
@@ -73,7 +70,6 @@ function salvarTudo() {
     localStorage.setItem('sys_produtos', JSON.stringify(produtos));
 }
 
-// --- AUTENTICAÇÃO E SESSÃO ---
 async function realizarLogin(e) {
     e.preventDefault();
     const matriculaVal = document.getElementById('login-matricula').value.trim();
@@ -132,7 +128,6 @@ function configurarInterfaceSessao() {
     atualizarInterface();
 }
 
-// --- NAVEGAÇÃO ---
 document.querySelectorAll('.nav-item').forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -145,7 +140,6 @@ document.querySelectorAll('.nav-item').forEach(link => {
     });
 });
 
-// --- GERENCIAMENTO DE USUÁRIOS ---
 async function salvarUsuario(e) {
     e.preventDefault();
     const editingMatricula = document.getElementById('usr-editing-matricula').value;
@@ -244,7 +238,6 @@ function removerUsuario(matricula) {
     atualizarInterface();
 }
 
-// --- GERENCIAMENTO DE CARGOS & UNIDADES ---
 function salvarCargo(e) {
     e.preventDefault();
     const id = document.getElementById('cargo-id').value.trim().toLowerCase();
@@ -314,7 +307,6 @@ function removerUnidade(id) {
     atualizarInterface();
 }
 
-// --- GERENCIAMENTO DE PRODUTOS ---
 function salvarProduto(e) {
     e.preventDefault();
     const id = document.getElementById('prod-id').value.trim();
@@ -343,7 +335,6 @@ function removerProduto(id) {
     atualizarInterface();
 }
 
-// --- INTERFACE DE USUÁRIO & RENDERIZAÇÃO ---
 function carregarSelectsGerais() {
     const selCargo = document.getElementById('usr-cargo');
     selCargo.innerHTML = cargos.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
@@ -356,7 +347,6 @@ function carregarSelectsGerais() {
 }
 
 function atualizarInterface() {
-    // Renderizar Tabela de Usuários
     const tbUsuarios = document.getElementById('tb-usuarios');
     tbUsuarios.innerHTML = '';
     usuarios.forEach(u => {
@@ -377,7 +367,6 @@ function atualizarInterface() {
         tbUsuarios.appendChild(tr);
     });
 
-    // Renderizar Tabela de Cargos
     const tbCargos = document.getElementById('tb-cargos');
     tbCargos.innerHTML = '';
     cargos.forEach(c => {
@@ -393,7 +382,6 @@ function atualizarInterface() {
         tbCargos.appendChild(tr);
     });
 
-    // Renderizar Tabela de Unidades
     const tbUnidades = document.getElementById('tb-unidades');
     tbUnidades.innerHTML = '';
     unidades.forEach(u => {
@@ -409,7 +397,6 @@ function atualizarInterface() {
         tbUnidades.appendChild(tr);
     });
 
-    // Renderizar Tabela de Produtos
     const tbProdutos = document.getElementById('tb-produtos');
     tbProdutos.innerHTML = '';
     produtos.forEach(p => {
@@ -429,7 +416,6 @@ function atualizarInterface() {
     });
 }
 
-// --- LISTENERS DOS FORMULÁRIOS ---
 document.getElementById('form-login').addEventListener('submit', realizarLogin);
 document.getElementById('form-usuario').addEventListener('submit', salvarUsuario);
 document.getElementById('form-cargo').addEventListener('submit', salvarCargo);
@@ -438,5 +424,4 @@ document.getElementById('form-produto').addEventListener('submit', salvarProduto
 document.getElementById('btn-cancelar-usr').addEventListener('click', cancelarEdicaoUsuario);
 document.getElementById('btn-logout').addEventListener('click', logout);
 
-// Inicialização do App
 window.onload = init;
