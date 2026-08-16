@@ -23,6 +23,17 @@ body {
     margin-bottom: 25px;
 }
 
+.sub-title {
+    margin: 20px 0 10px 0;
+    color: #2c3e50;
+    font-size: 1.05rem;
+}
+
+.input-readonly {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
 /* LOGIN ALINHADO À ESQUERDA */
 .login-wrapper {
     display: flex;
@@ -68,6 +79,21 @@ body {
     font-size: 0.95rem;
 }
 
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
 /* APP PRINCIPAL E SIDEBAR */
 .app-container {
     display: flex;
@@ -76,7 +102,7 @@ body {
 }
 
 .sidebar {
-    width: 240px;
+    width: 250px;
     background-color: #1a252f;
     color: #fff;
     transition: width 0.3s ease;
@@ -112,20 +138,34 @@ body {
 
 .sidebar-content h3 {
     font-size: 1.1rem;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     color: #ecf0f1;
 }
 
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
+}
+
+.nav-divider {
+    border: 0;
+    border-top: 1px solid #34495e;
+    margin: 10px 0;
+}
+
+.nav-header {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #7f8c8d;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
 }
 
 .nav-link {
     color: #bdc3c7;
     text-decoration: none;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     padding: 8px 10px;
     border-radius: 4px;
     transition: background 0.2s, color 0.2s;
@@ -203,7 +243,6 @@ button {
 .btn-primary {
     background-color: #2c3e50;
     color: #fff;
-    width: 100%;
 }
 
 .btn-primary:hover {
@@ -265,7 +304,7 @@ button {
 /* FORM GRID */
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 15px;
 }
 
