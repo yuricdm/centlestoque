@@ -51,6 +51,21 @@ let usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado")) || null;
 let unidadeSelecionada = JSON.parse(sessionStorage.getItem("unidadeSelecionada")) || null;
 
 // ========================================
+// CONTROLE DO MENU LATERAL (SIDEBAR)
+// ========================================
+
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebarNav");
+    sidebar.classList.toggle("oculto");
+}
+
+function navegarEFechar(pagina) {
+    mostrarPagina(pagina);
+    const sidebar = document.getElementById("sidebarNav");
+    if (sidebar) sidebar.classList.add("oculto");
+}
+
+// ========================================
 // PERSISTÊNCIA DE DADOS
 // ========================================
 
@@ -63,7 +78,6 @@ function salvarDados() {
     localStorage.setItem("pendencias", JSON.stringify(pendencias));
 }
 
-// Helper para verificar se o usuário atual possui determinada permissão
 function temPermissao(permissao) {
     if (!usuarioLogado) return false;
     const cargo = cargos.find(c => c.id === usuarioLogado.perfil);
@@ -72,7 +86,7 @@ function temPermissao(permissao) {
 }
 
 // ========================================
-// AUTENTICAÇÃO E RECUPERAÇÃO DE SENHA
+// AUTENTICAÇÃO E SESSÃO
 // ========================================
 
 function realizarLogin() {
@@ -84,7 +98,17 @@ function realizarLogin() {
     if (conta) {
         usuarioLogado = conta;
         sessionStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
-        exibirSelecaoUnidades();
+        
+        // Define unidade padrão sem passar pela página de seleção
+        if (usuarioLogado.unidadeId !== "TODAS") {
+            const uni = unidades.find(u => u.id === usuarioLogado.unidadeId);
+            unidadeSelecionada = uni || unidades[0];
+        } else {
+            unidadeSelecionada = unidades[0];
+        }
+        
+        sessionStorage.setItem("unidadeSelecionada", JSON.stringify(unidadeSelecionada));
+        iniciarSessao();
     } else {
         alert("Usuário ou senha incorretos!\n\nUsuários de teste (senha 1234):\n- admin\n- coordenador\n- supervisor\n- tecnico");
     }
@@ -122,6 +146,9 @@ function realizarLogout() {
     document.getElementById("usuarioInput").value = "";
     document.getElementById("senhaInput").value = "";
 
+    const sidebar = document.getElementById("sidebarNav");
+    if (sidebar) sidebar.classList.add("oculto");
+
     iniciarSessao();
 }
 
@@ -155,12 +182,6 @@ function selecionarUnidade(id, nome) {
     iniciarSessao();
 }
 
-function voltarParaSelecaoUnidades() {
-    unidadeSelecionada = null;
-    sessionStorage.removeItem("unidadeSelecionada");
-    exibirSelecaoUnidades();
-}
-
 function aplicarPermissoesInterface() {
     if (!usuarioLogado) return;
 
@@ -176,10 +197,10 @@ function aplicarPermissoesInterface() {
     const badgeCount = document.getElementById("badgePendenciasCount");
     if (badgeCount) badgeCount.textContent = pendencias.length;
 
-    if (navDashboard) navDashboard.style.display = temPermissao("ver_dashboard") ? "inline-block" : "none";
-    if (navPendencias) navPendencias.style.display = temPermissao("aprovar_pendencias") ? "inline-block" : "none";
-    if (navUsuarios) navUsuarios.style.display = temPermissao("gerenciar_usuarios") ? "inline-block" : "none";
-    if (navCargos) navCargos.style.display = temPermissao("gerenciar_cargos") ? "inline-block" : "none";
+    if (navDashboard) navDashboard.style.display = temPermissao("ver_dashboard") ? "block" : "none";
+    if (navPendencias) navPendencias.style.display = temPermissao("aprovar_pendencias") ? "block" : "none";
+    if (navUsuarios) navUsuarios.style.display = temPermissao("gerenciar_usuarios") ? "block" : "none";
+    if (navCargos) navCargos.style.display = temPermissao("gerenciar_cargos") ? "block" : "none";
 
     if (containerFormProdutos) containerFormProdutos.style.display = temPermissao("cadastrar_produto") ? "grid" : "none";
     if (containerImportarExcel) containerImportarExcel.style.display = temPermissao("exportar_excel") ? "block" : "none";
@@ -187,20 +208,18 @@ function aplicarPermissoesInterface() {
 }
 
 function iniciarSessao() {
-    const menuNav = document.getElementById("menuNavegacao");
     const infoHeader = document.getElementById("infoUsuarioHeader");
+    const btnToggleSidebar = document.getElementById("btnToggleSidebar");
     const nomeUnidadeElem = document.getElementById("nomeUnidadeAtual");
 
     if (usuarioLogado) {
         if (!unidadeSelecionada) {
-            menuNav.classList.add("oculto");
-            infoHeader.classList.add("oculto");
-            exibirSelecaoUnidades();
-            return;
+            unidadeSelecionada = unidades[0];
+            sessionStorage.setItem("unidadeSelecionada", JSON.stringify(unidadeSelecionada));
         }
 
-        menuNav.classList.remove("oculto");
-        infoHeader.classList.remove("oculto");
+        if (infoHeader) infoHeader.classList.remove("oculto");
+        if (btnToggleSidebar) btnToggleSidebar.classList.remove("oculto");
         
         if (nomeUnidadeElem) {
             nomeUnidadeElem.textContent = `${usuarioLogado.nome} (${usuarioLogado.perfil.toUpperCase()}) | ${unidadeSelecionada.nome}`;
@@ -218,8 +237,8 @@ function iniciarSessao() {
             mostrarPagina("movimentacao");
         }
     } else {
-        menuNav.classList.add("oculto");
-        infoHeader.classList.add("oculto");
+        if (infoHeader) infoHeader.classList.add("oculto");
+        if (btnToggleSidebar) btnToggleSidebar.classList.add("oculto");
         mostrarPagina("login");
     }
 }
@@ -242,7 +261,7 @@ function mostrarPagina(pagina) {
 }
 
 // ========================================
-// GESTÃO DE CARGOS E PERMISSÕES (NOVO)
+// GESTÃO DE CARGOS E PERMISSÕES
 // ========================================
 
 function cadastrarNovoCargo() {
@@ -261,8 +280,7 @@ function cadastrarNovoCargo() {
     const checkboxes = document.querySelectorAll(".chk-perm:checked");
     const permissoes = Array.from(checkboxes).map(c => c.value);
 
-    const existe = cargos.some(c => c.id === id);
-    if (existe) {
+    if (cargos.some(c => c.id === id)) {
         alert("Já existe um cargo registrado com esse nome.");
         return;
     }
