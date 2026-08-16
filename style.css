@@ -1,125 +1,108 @@
-/* ==========================================================================
-   1. AJUSTE DE LAYOUT INICIAL E TELA DE LOGIN (ALINHADO À ESQUERDA)
-   ========================================================================== */
-.card-login {
-    background: white;
-    max-width: 420px;
-    margin: 40px 0; /* Alinhado à esquerda na área principal */
-    padding: 32px;
-    border-radius: var(--radius-ml);
-    box-shadow: var(--shadow-card);
-    border: 1px solid var(--ml-gray-border);
-    text-align: left;
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EstoqueML - Gestão de Estoque</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-.container-unidades {
-    text-align: left; /* Alinha o cabeçalho de seleção de unidades à esquerda */
-    max-width: 100%;
-    margin: 30px 0;
-}
+    <!-- CABEÇALHO DA APLICAÇÃO -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <span class="logo-icone">📦</span>
+                <span class="logo-texto"><strong>Estoque</strong>ML</span>
+            </div>
+            <nav id="menu-navegacao">
+                <button onclick="navegarPara('login')" class="btn-sair">Sair</button>
+            </nav>
+        </div>
+    </header>
 
-.container-unidades h2 {
-    font-size: 22px;
-    margin-bottom: 6px;
-    color: var(--ml-dark);
-}
+    <main>
+        <!-- TELA 1: LOGIN -->
+        <section id="tela-login" class="card-login">
+            <h2>Acesse a sua conta</h2>
+            <p>Informe suas credenciais para entrar no sistema</p>
 
-.container-unidades p {
-    color: var(--ml-gray-text);
-    margin-bottom: 24px;
-    font-size: 14px;
-}
+            <form onsubmit="realizarLogin(event)">
+                <div class="campo-login">
+                    <label for="usuario">Usuário</label>
+                    <input type="text" id="usuario" placeholder="Informe seu usuário" required>
+                </div>
 
-.grid-unidades {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
-}
+                <div class="campo-login">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" placeholder="••••••••" required>
+                </div>
 
-/* ==========================================================================
-   2. MELHORIAS DE RESPONSIVIDADE E ADAPTAÇÃO MOBILE
-   ========================================================================== */
-@media (max-width: 768px) {
-    /* Header e Navegação */
-    .header-container {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 10px 16px;
-        gap: 10px;
-    }
+                <div class="campo-login-links">
+                    <a href="#" onclick="navegarPara('recuperar')">Esqueceu a senha?</a>
+                </div>
 
-    .logo {
-        justify-content: space-between;
-        width: 100%;
-    }
+                <button type="submit" class="btn-principal btn-block">Entrar</button>
+            </form>
 
-    nav {
-        display: flex;
-        width: 100%;
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-bottom: 6px;
-        -webkit-overflow-scrolling: touch;
-    }
+            <div class="dica-perfis">
+                <strong>Padrão para teste (senha 1234):</strong><br>
+                admin | coordenador | supervisor | tecnico
+            </div>
+        </section>
 
-    nav button {
-        flex: 0 0 auto;
-        font-size: 13px;
-        padding: 6px 10px;
-    }
+        <!-- TELA 2: RECUPERAÇÃO DE SENHA -->
+        <section id="tela-recuperar" class="card-login oculto">
+            <h2>Recuperar Senha</h2>
+            <p>Informe seu e-mail ou usuário para receber as instruções.</p>
 
-    /* Ajustes Gerais de Conteúdo */
-    main {
-        padding: 0 12px;
-        margin: 16px auto;
-    }
+            <form onsubmit="recuperarSenha(event)">
+                <div class="campo-login">
+                    <label for="email-recupera">E-mail ou Usuário</label>
+                    <input type="email" id="email-recupera" placeholder="seuemail@empresa.com" required>
+                </div>
 
-    .card-login {
-        max-width: 100%;
-        margin: 16px 0;
-        padding: 20px;
-    }
+                <div class="acoes-formulario">
+                    <button type="submit" class="btn-principal btn-block">Enviar Link</button>
+                    <a href="#" onclick="navegarPara('login')" class="link-voltar">Voltar ao login</a>
+                </div>
+            </form>
+        </section>
 
-    /* Grids e Formulários */
-    .cards {
-        grid-template-columns: 1fr;
-    }
+        <!-- TELA 3: DASHBOARD GERAL -->
+        <section id="tela-dashboard" class="pagina oculto">
+            <h1>Dashboard Geral <span class="badge-unidade">Consolidado</span></h1>
+            
+            <div class="cards">
+                <div class="card">
+                    <h3>Valor Total em Estoque</h3>
+                    <strong id="kpi-valor">R$ 145.800,00</strong>
+                </div>
+                <div class="card">
+                    <h3>Total de Itens Cadastrados</h3>
+                    <strong id="kpi-itens">1.240 SKUs</strong>
+                </div>
+                <div class="card alerta-card">
+                    <h3>Alertas de Estoque Baixo</h3>
+                    <strong id="kpi-alertas">18 Itens</strong>
+                </div>
+                <div class="card">
+                    <h3>Solicitações Pendentes</h3>
+                    <strong id="kpi-pendentes">3 Requisições</strong>
+                </div>
+            </div>
 
-    .formulario {
-        grid-template-columns: 1fr;
-        padding: 16px;
-    }
+            <div class="painel">
+                <h2>Ações Rápidas</h2>
+                <button onclick="navegarPara('login')" class="btn-cancelar">Encerrar Sessão</button>
+            </div>
+        </section>
+    </main>
 
-    .grid-permissoes {
-        grid-template-columns: 1fr;
-    }
+    <footer>
+        <p>&copy; 2026 Mercado Livre Estoque - Todos os direitos reservados.</p>
+    </footer>
 
-    /* Tabelas com Scroll Horizontal Responsivo */
-    .painel {
-        padding: 16px;
-        overflow-x: auto;
-    }
-
-    table {
-        min-width: 600px; /* Garante usabilidade sem quebrar colunas */
-    }
-
-    .top-bar-painel {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .barra-pesquisa {
-        width: 100%;
-    }
-
-    .acoes-excel {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .btn-excel, .btn-principal, .btn-cancelar {
-        width: 100%;
-        justify-content: center;
-    }
-}
+    <script src="script.js"></script>
+</body>
+</html>
