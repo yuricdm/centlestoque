@@ -6,7 +6,6 @@
     --ml-blue: #2d3277;
     --ml-blue-hover: #1e2252;
     --ml-dark: #333333;
-    --ml-gray-bg: #edd000; /* Fundo suave */
     --ml-gray-bg-light: #f5f5f5;
     --ml-gray-light: #f8f9fa;
     --ml-gray-border: #e6e6e6;
@@ -40,7 +39,7 @@ body {
 }
 
 /* ==========================================================================
-   2. CABEÇALHO E NAVEGAÇÃO (HEADER)
+   2. CABEÇALHO E NAVEGAÇÃO (HEADER & SIDEBAR)
    ========================================================================== */
 header {
     background-color: var(--ml-yellow);
@@ -57,8 +56,21 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
     gap: 12px;
+}
+
+.btn-sidebar-toggle {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--ml-blue);
+    padding: 0 8px;
 }
 
 .logo {
@@ -86,33 +98,64 @@ header {
     border-radius: 20px;
 }
 
-nav {
+/* MENU LATERAL (SIDEBAR) */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100vh;
+    background-color: white;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+    z-index: 1100;
+    padding: 24px 16px;
     display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 20px;
+    transition: transform 0.3s ease-in-out;
 }
 
-nav button {
+.sidebar.oculto {
+    transform: translateX(-100%);
+    display: flex !important;
+}
+
+.btn-fechar-sidebar {
+    align-self: flex-end;
     background: transparent;
     border: none;
-    padding: 8px 12px;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--ml-gray-text);
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar nav button {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
     font-size: 14px;
     font-weight: 500;
     color: var(--ml-dark);
     cursor: pointer;
     border-radius: var(--radius-ml);
-    transition: background 0.2s, color 0.2s;
-    position: relative;
+    transition: background 0.2s;
 }
 
-nav button:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+.sidebar nav button:hover {
+    background-color: var(--ml-gray-light);
 }
 
 .btn-trocar-unidade {
-    background-color: rgba(255, 255, 255, 0.8) !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background-color: #f0f4fb !important;
+    color: var(--ml-blue) !important;
     font-weight: 600 !important;
 }
 
@@ -124,13 +167,13 @@ nav button:hover {
 .btn-sair {
     color: var(--ml-red) !important;
     font-weight: 600 !important;
+    margin-top: auto;
 }
 
 .btn-sair:hover {
     background-color: rgba(255, 90, 95, 0.1) !important;
 }
 
-/* BADGE DE NOTIFICAÇÃO DE PENDÊNCIAS */
 .badge-count {
     background-color: var(--ml-red);
     color: white;
@@ -142,7 +185,7 @@ nav button:hover {
 }
 
 /* ==========================================================================
-   3. ÁREA PRINCIPAL & PÁGINAS
+   3. ÁREA PRINCIPAL & LOGIN NA LATERAL ESQUERDA
    ========================================================================== */
 main {
     max-width: 1200px;
@@ -166,32 +209,18 @@ main {
     to { opacity: 1; transform: translateY(0); }
 }
 
-h1 {
-    font-size: 22px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: var(--ml-dark);
+/* TELA DE LOGIN ALINHADA À ESQUERDA */
+#login {
     display: flex;
+    justify-content: flex-start;
     align-items: center;
-    gap: 10px;
+    min-height: calc(100vh - 160px);
 }
 
-.badge-unidade {
-    font-size: 13px;
-    font-weight: 500;
-    background-color: #e3edfb;
-    color: var(--ml-blue);
-    padding: 4px 10px;
-    border-radius: 12px;
-}
-
-/* ==========================================================================
-   4. TELA DE LOGIN E UNIDADES
-   ========================================================================== */
 .card-login {
     background: white;
-    max-width: 400px;
-    margin: 40px auto;
+    width: 100%;
+    max-width: 380px;
     padding: 32px;
     border-radius: var(--radius-ml);
     box-shadow: var(--shadow-card);
@@ -248,6 +277,26 @@ h1 {
     color: var(--ml-gray-text);
 }
 
+/* OUTROS ESTILOS DA INTERFACE */
+h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--ml-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.badge-unidade {
+    font-size: 13px;
+    font-weight: 500;
+    background-color: #e3edfb;
+    color: var(--ml-blue);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
 /* GRID DE UNIDADES */
 .container-unidades {
     text-align: center;
@@ -294,9 +343,7 @@ h1 {
     color: var(--ml-dark);
 }
 
-/* ==========================================================================
-   5. CARDS DO DASHBOARD
-   ========================================================================== */
+/* CARDS DO DASHBOARD */
 .cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -329,9 +376,7 @@ h1 {
     color: var(--ml-red);
 }
 
-/* ==========================================================================
-   6. FORMULÁRIOS & CAMPOS
-   ========================================================================== */
+/* FORMULÁRIOS & CAMPOS */
 .formulario {
     background: white;
     padding: 24px;
@@ -385,9 +430,7 @@ input:focus, select:focus {
     margin-top: 8px;
 }
 
-/* ==========================================================================
-   7. GESTÃO DE CARGOS & PERMISSÕES (NOVO)
-   ========================================================================== */
+/* PERMISSÕES */
 .grid-permissoes {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -416,9 +459,7 @@ input:focus, select:focus {
     cursor: pointer;
 }
 
-/* ==========================================================================
-   8. TABELAS E PAINÉIS
-   ========================================================================== */
+/* TABELAS */
 .painel {
     background: white;
     padding: 24px;
@@ -484,7 +525,6 @@ tbody tr:hover {
     background-color: #fafafa;
 }
 
-/* BADGES DE STATUS */
 .status-ok {
     color: var(--ml-green);
     font-weight: 600;
@@ -497,9 +537,7 @@ tbody tr:hover {
     font-size: 12px;
 }
 
-/* ==========================================================================
-   9. BOTÕES E COMPONENTES
-   ========================================================================== */
+/* BOTÕES */
 .btn-principal {
     background-color: var(--ml-blue);
     color: white;
@@ -599,9 +637,7 @@ tbody tr:hover {
     font-size: 14px;
 }
 
-/* ==========================================================================
-   10. RODAPÉ (FOOTER)
-   ========================================================================== */
+/* RODAPÉ */
 footer {
     text-align: center;
     padding: 20px;
@@ -610,32 +646,4 @@ footer {
     background-color: white;
     border-top: 1px solid var(--ml-gray-border);
     margin-top: auto;
-}
-
-/* RESPONSIVIDADE */
-@media (max-width: 768px) {
-    .header-container {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    nav {
-        width: 100%;
-        overflow-x: auto;
-        padding-bottom: 4px;
-    }
-
-    .top-bar-painel {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .acoes-excel {
-        flex-direction: column;
-    }
-
-    .btn-excel {
-        width: 100%;
-        justify-content: center;
-    }
 }
