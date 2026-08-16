@@ -215,7 +215,7 @@ function salvarTudo() {
 }
 
 // ==========================================================================
-// 4. AUTENTICAÇÃO E SESSÃO
+// 4. AUTENTICAÇÃO E SESSÃO (CORRIGIDA)
 // ==========================================================================
 
 async function realizarLogin(e) {
@@ -229,19 +229,31 @@ async function realizarLogin(e) {
         return;
     }
 
+    // Procura o usuário cadastrado correspondente à Matrícula ou Login
+    const conta = usuarios.find(u => u.matricula === matriculaVal || u.login === matriculaVal);
+
+    if (!conta) {
+        exibirModal({ titulo: "Acesso Negado", mensagem: "Matrícula ou senha incorretos." });
+        return;
+    }
+
+    // Calcula os hashes da senha informada no input
     const hashForm = await gerarHashSenha(senhaVal);
     const b64Form = btoa(senhaVal);
 
-    const conta = usuarios.find(u => 
-        (u.matricula === matriculaVal || u.login === matriculaVal) && 
-        (u.senhaHash === hashForm || u.senhaB64 === b64Form || u.senha === senhaVal || u.senhaHash === HASH_1234_SHA)
-    );
+    // Valida a senha contra os registros salvos do próprio usuário
+    const senhaValida = 
+        (conta.senhaHash && conta.senhaHash === hashForm) ||
+        (conta.senhaB64 && conta.senhaB64 === b64Form) ||
+        (conta.senha && conta.senha === senhaVal);
 
-    if (conta) {
+    if (senhaValida) {
         usuarioLogado = conta;
         sessionStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
 
-        const unidadesPermitidas = unidades.filter(u => conta.unidadesIds.includes(u.id));
+        const unidadesPermitidas = unidades.filter(u => 
+            conta.unidadesIds && conta.unidadesIds.includes(u.id)
+        );
         unidadeSelecionada = unidadesPermitidas[0] || unidades[0];
         sessionStorage.setItem("unidadeSelecionada", JSON.stringify(unidadeSelecionada));
 
@@ -733,4 +745,3 @@ document.addEventListener("DOMContentLoaded", () => {
         iniciarSessao();
     }
 });
-
