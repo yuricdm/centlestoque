@@ -11,8 +11,8 @@
     <!-- NOTIFICAÇÕES TOAST -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- TELA DE LOGIN -->
-    <div id="loginArea" class="login-container">
+    <!-- TELA DE LOGIN (LATERAL ESQUERDA) -->
+    <div id="loginArea" class="login-wrapper">
         <div class="login-card">
             <h2>Acesso ao Sistema</h2>
             <form id="loginForm">
@@ -32,106 +32,135 @@
 
     <!-- TELA PRINCIPAL DO SISTEMA -->
     <div id="mainArea" class="app-container oculto">
-        <header class="topbar">
-            <h1>Controle de Estoque Unificado</h1>
-            <div class="user-info">
-                <span>Usuário: <strong id="usuarioNomeLogado">-</strong></span>
-                <span>Unidade: <strong id="unidadeNomeAtual">-</strong></span>
-                <button onclick="encerrarSessao()" class="btn-danger">Sair</button>
+        
+        <!-- SIDEBAR (MENU LATERAL RETRÁTIL) -->
+        <aside id="sidebar" class="sidebar fechada">
+            <button id="toggleSidebar" class="btn-toggle-sidebar" onclick="alternarSidebar()">
+                <span id="iconSidebar">&#x2630;</span>
+            </button>
+            <div class="sidebar-content">
+                <h3>Navegação</h3>
+                <nav class="sidebar-nav">
+                    <a href="#dashSection" class="nav-link">Dashboard</a>
+                    <a href="#cadastroSection" class="nav-link">Cadastrar Produto</a>
+                    <a href="#produtosSection" class="nav-link">Estoque</a>
+                    <a href="#historicoSection" class="nav-link">Histórico</a>
+                </nav>
             </div>
-        </header>
+        </aside>
 
-        <main class="content">
-            <!-- PAINEL DE CONTROLE / ESTATÍSTICAS -->
-            <section class="dashboard-grid">
-                <div class="card stat-card">
-                    <h4>Total de Produtos</h4>
-                    <p id="statTotalProdutos">0</p>
+        <!-- CONTEÚDO PRINCIPAL -->
+        <div class="main-wrapper">
+            <header class="topbar">
+                <h1>Controle de Estoque Unificado</h1>
+                <div class="user-info">
+                    <span>Usuário: <strong id="usuarioNomeLogado">-</strong></span>
+                    <button onclick="encerrarSessao()" class="btn-danger">Sair</button>
                 </div>
-                <div class="card stat-card">
-                    <h4>Itens em Alerta</h4>
-                    <p id="statItensAlerta">0</p>
-                </div>
-                <div class="card stat-card">
-                    <h4>Total em Estoque</h4>
-                    <p id="statTotalEstoque">0</p>
-                </div>
-            </section>
+            </header>
 
-            <!-- CADASTRO DE PRODUTO -->
-            <section class="card section-margin">
-                <h3>Cadastrar Novo Produto</h3>
-                <form id="produtoForm" class="form-grid">
-                    <div class="form-group">
-                        <label for="prodNome">Nome do Produto</label>
-                        <input type="text" id="prodNome" placeholder="Ex: Teclado USB" required>
+            <main class="content">
+                <!-- SELETOR DE UNIDADE NA TELA INICIAL -->
+                <section class="card section-margin">
+                    <div class="unidade-selector-container">
+                        <label for="unidadeSelect"><strong>Unidade Atual:</strong></label>
+                        <select id="unidadeSelect" onchange="trocarUnidade(this.value)">
+                            <!-- Opções dinâmicas via JS -->
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label for="prodCategoria">Categoria</label>
-                        <input type="text" id="prodCategoria" placeholder="Ex: Periféricos" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="prodQuantidade">Quantidade Inicial</label>
-                        <input type="number" id="prodQuantidade" min="0" value="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="prodMinimo">Estoque Mínimo</label>
-                        <input type="number" id="prodMinimo" min="0" value="5" required>
-                    </div>
-                    <div class="form-group full-width">
-                        <button type="submit" class="btn-primary">Salvar Produto</button>
-                    </div>
-                </form>
-            </section>
+                </section>
 
-            <!-- TABELA DE PRODUTOS -->
-            <section class="card section-margin">
-                <h3>Produtos em Estoque</h3>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Produto</th>
-                                <th>Categoria</th>
-                                <th>Qtd. Atual</th>
-                                <th>Mínimo</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaProdutosBody">
-                            <tr>
-                                <td colspan="7" class="text-center">Nenhum produto cadastrado.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                <!-- PAINEL DE CONTROLE / ESTATÍSTICAS -->
+                <section id="dashSection" class="dashboard-grid">
+                    <div class="card stat-card">
+                        <h4>Total de Produtos</h4>
+                        <p id="statTotalProdutos">0</p>
+                    </div>
+                    <div class="card stat-card">
+                        <h4>Itens em Alerta</h4>
+                        <p id="statItensAlerta">0</p>
+                    </div>
+                    <div class="card stat-card">
+                        <h4>Total em Estoque</h4>
+                        <p id="statTotalEstoque">0</p>
+                    </div>
+                </section>
 
-            <!-- HISTÓRICO DE MOVIMENTAÇÕES -->
-            <section class="card">
-                <h3>Histórico de Movimentações</h3>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Data/Hora</th>
-                                <th>Produto</th>
-                                <th>Tipo</th>
-                                <th>Quantidade</th>
-                                <th>Usuário</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaHistoricoBody">
-                            <tr>
-                                <td colspan="5" class="text-center">Nenhuma movimentação registrada.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
+                <!-- CADASTRO DE PRODUTO -->
+                <section id="cadastroSection" class="card section-margin">
+                    <h3>Cadastrar Novo Produto</h3>
+                    <form id="produtoForm" class="form-grid">
+                        <div class="form-group">
+                            <label for="prodNome">Nome do Produto</label>
+                            <input type="text" id="prodNome" placeholder="Ex: Teclado USB" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="prodCategoria">Categoria</label>
+                            <input type="text" id="prodCategoria" placeholder="Ex: Periféricos" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="prodQuantidade">Quantidade Inicial</label>
+                            <input type="number" id="prodQuantidade" min="0" value="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="prodMinimo">Estoque Mínimo</label>
+                            <input type="number" id="prodMinimo" min="0" value="5" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <button type="submit" class="btn-primary">Salvar Produto</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- TABELA DE PRODUTOS -->
+                <section id="produtosSection" class="card section-margin">
+                    <h3>Produtos em Estoque</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Produto</th>
+                                    <th>Categoria</th>
+                                    <th>Qtd. Atual</th>
+                                    <th>Mínimo</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaProdutosBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">Nenhum produto cadastrado.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- HISTÓRICO DE MOVIMENTAÇÕES -->
+                <section id="historicoSection" class="card">
+                    <h3>Histórico de Movimentações</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Produto</th>
+                                    <th>Tipo</th>
+                                    <th>Quantidade</th>
+                                    <th>Usuário</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaHistoricoBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">Nenhuma movimentação registrada.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
     </div>
 
     <!-- MODAL CUSTOMIZADO -->
