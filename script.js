@@ -39,6 +39,41 @@ function resetarDadosSistema() {
     location.reload();
 }
 
+function exibirTelaRecuperacao(exibir) {
+    const loginArea = document.getElementById("loginArea");
+    const recArea = document.getElementById("recuperarSenhaArea");
+
+    if (exibir) {
+        loginArea.classList.add("oculto");
+        recArea.classList.remove("oculto");
+    } else {
+        recArea.classList.add("oculto");
+        loginArea.classList.remove("oculto");
+    }
+}
+
+function processarRecuperacaoSenha(e) {
+    e.preventDefault();
+    const termo = document.getElementById("recuperarInput").value.trim();
+    const termoLimpo = termo.replace(/\D/g, '');
+
+    const conta = usuarios.find(u => 
+        u.email.toLowerCase() === termo.toLowerCase() || 
+        u.cpf.replace(/\D/g, '') === termoLimpo
+    );
+
+    if (conta) {
+        exibirModal({
+            titulo: "Recuperação de Senha",
+            mensagem: `Instruções de redefinição foram enviadas para o e-mail: ${conta.email}`
+        });
+        document.getElementById("recuperarSenhaForm").reset();
+        exibirTelaRecuperacao(false);
+    } else {
+        exibirToast("Usuário não localizado com estes dados.", "erro");
+    }
+}
+
 // ==========================================================================
 // 2. SIDEBAR, TOAST E MODAL
 // ==========================================================================
@@ -186,6 +221,7 @@ async function realizarLogin(e) {
 
 function iniciarSessao() {
     document.getElementById("loginArea").classList.add("oculto");
+    document.getElementById("recuperarSenhaArea").classList.add("oculto");
     document.getElementById("mainArea").classList.remove("oculto");
 
     carregarSelectsGerais();
@@ -198,7 +234,6 @@ function encerrarSessao() {
 }
 
 function carregarSelectsGerais() {
-    // Select da unidade principal
     const selectUnidadeMain = document.getElementById("unidadeSelect");
     selectUnidadeMain.innerHTML = "";
     unidades.forEach(u => {
@@ -209,7 +244,6 @@ function carregarSelectsGerais() {
         selectUnidadeMain.appendChild(opt);
     });
 
-    // Select de cargos para cadastro de usuário
     const selectCargoUsr = document.getElementById("usrCargo");
     selectCargoUsr.innerHTML = "";
     cargos.forEach(c => {
@@ -219,7 +253,6 @@ function carregarSelectsGerais() {
         selectCargoUsr.appendChild(opt);
     });
 
-    // Select de unidades para cadastro de usuário
     const selectUnidadeUsr = document.getElementById("usrUnidade");
     selectUnidadeUsr.innerHTML = "";
     unidades.forEach(u => {
@@ -241,7 +274,7 @@ function trocarUnidade(idUnidade) {
 }
 
 // ==========================================================================
-// 5. MÓDULO DE ADMINISTRAÇÃO (USUÁRIOS, CARGOS, UNIDADES)
+// 5. MÓDULO DE ADMINISTRAÇÃO
 // ==========================================================================
 
 async function cadastrarUsuario(e) {
@@ -480,7 +513,6 @@ function atualizarInterface() {
         document.getElementById("usuarioCargoLogado").textContent = cargoAtual.nome;
     }
 
-    // Exibe ou oculta opções admin conforme permissão do cargo
     const adminSections = [
         document.getElementById("usuariosSection"),
         document.getElementById("cargosSection"),
@@ -494,7 +526,6 @@ function atualizarInterface() {
         }
     });
 
-    // Métricas do Dashboard
     const produtosUnidade = produtos.filter(p => p.unidadeId === unidadeSelecionada.id);
     const movimentacoesUnidade = movimentacoes.filter(m => m.unidadeId === unidadeSelecionada.id);
 
@@ -502,7 +533,6 @@ function atualizarInterface() {
     document.getElementById("statItensAlerta").textContent = produtosUnidade.filter(p => p.quantidade <= p.minimo).length;
     document.getElementById("statTotalEstoque").textContent = produtosUnidade.reduce((acc, p) => acc + p.quantidade, 0);
 
-    // Tabela de Produtos
     const tbodyProd = document.getElementById("tabelaProdutosBody");
     tbodyProd.innerHTML = "";
     if (produtosUnidade.length === 0) {
@@ -528,7 +558,6 @@ function atualizarInterface() {
         });
     }
 
-    // Tabela de Histórico
     const tbodyHist = document.getElementById("tabelaHistoricoBody");
     tbodyHist.innerHTML = "";
     if (movimentacoesUnidade.length === 0) {
@@ -547,7 +576,6 @@ function atualizarInterface() {
         });
     }
 
-    // Tabela de Usuários
     const tbodyUsr = document.getElementById("tabelaUsuariosBody");
     tbodyUsr.innerHTML = "";
     usuarios.forEach(u => {
@@ -569,7 +597,6 @@ function atualizarInterface() {
         tbodyUsr.appendChild(tr);
     });
 
-    // Tabela de Cargos
     const tbodyCargos = document.getElementById("tabelaCargosBody");
     tbodyCargos.innerHTML = "";
     cargos.forEach(c => {
@@ -590,7 +617,6 @@ function atualizarInterface() {
         tbodyCargos.appendChild(tr);
     });
 
-    // Tabela de Unidades
     const tbodyUnidades = document.getElementById("tabelaUnidadesBody");
     tbodyUnidades.innerHTML = "";
     unidades.forEach(u => {
@@ -612,6 +638,7 @@ function atualizarInterface() {
 
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("loginForm").addEventListener("submit", realizarLogin);
+    document.getElementById("recuperarSenhaForm").addEventListener("submit", processarRecuperacaoSenha);
     document.getElementById("produtoForm").addEventListener("submit", cadastrarProduto);
     document.getElementById("usuarioForm").addEventListener("submit", cadastrarUsuario);
     document.getElementById("cargoForm").addEventListener("submit", cadastrarCargo);
