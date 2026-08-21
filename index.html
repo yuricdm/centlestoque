@@ -120,7 +120,7 @@
 
                 <!-- TELA 2: CADASTRO DE PRODUTO -->
                 <section id="cadastroSection" class="app-section oculto">
-                    <div class="card">
+                    <div class="card section-margin">
                         <h3>Cadastrar Novo Produto</h3>
                         <form id="produtoForm" class="form-grid">
                             <div class="form-group">
@@ -144,12 +144,25 @@
                             </div>
                         </form>
                     </div>
+
+                    <div class="card">
+                        <h3>Importar Produtos via Planilha</h3>
+                        <p class="instruction-text">Baixe o modelo, preencha as linhas com os produtos (Nome, Categoria, Quantidade, Estoque Mínimo) e importe o arquivo de volta. Os produtos serão cadastrados na unidade ativa selecionada no topo da tela.</p>
+                        <div class="btn-group-flex import-actions">
+                            <button type="button" class="btn-secondary" onclick="baixarModeloProdutos()">Baixar Modelo (.xlsx)</button>
+                            <label for="importProdutosInput" class="btn-primary btn-file-label">Importar Planilha Preenchida</label>
+                            <input type="file" id="importProdutosInput" accept=".xlsx,.xls,.csv" class="oculto" onchange="importarProdutosPlanilha(event)">
+                        </div>
+                    </div>
                 </section>
 
                 <!-- TELA 3: TABELA DE PRODUTOS / ESTOQUE -->
                 <section id="produtosSection" class="app-section oculto">
                     <div class="card">
-                        <h3>Produtos em Estoque</h3>
+                        <div class="section-header-flex">
+                            <h3>Produtos em Estoque</h3>
+                            <button type="button" class="btn-secondary" onclick="exportarEstoque()">Exportar Estoque (.xlsx)</button>
+                        </div>
                         <div class="table-responsive">
                             <table>
                                 <thead>
@@ -352,6 +365,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
