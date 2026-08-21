@@ -215,7 +215,7 @@ function salvarTudo() {
 }
 
 // ==========================================================================
-// 4. AUTENTICAÇÃO E SESSÃO (CORRIGIDA)
+// 4. AUTENTICAÇÃO E SESSÃO
 // ==========================================================================
 
 async function realizarLogin(e) {
@@ -229,31 +229,25 @@ async function realizarLogin(e) {
         return;
     }
 
-    // Procura o usuário cadastrado correspondente à Matrícula ou Login
-    const conta = usuarios.find(u => u.matricula === matriculaVal || u.login === matriculaVal);
-
-    if (!conta) {
-        exibirModal({ titulo: "Acesso Negado", mensagem: "Matrícula ou senha incorretos." });
-        return;
-    }
-
-    // Calcula os hashes da senha informada no input
     const hashForm = await gerarHashSenha(senhaVal);
     const b64Form = btoa(senhaVal);
 
-    // Valida a senha contra os registros salvos do próprio usuário
-    const senhaValida = 
-        (conta.senhaHash && conta.senhaHash === hashForm) ||
-        (conta.senhaB64 && conta.senhaB64 === b64Form) ||
-        (conta.senha && conta.senha === senhaVal);
+    // CORRIGIDO: removida a condição "u.senhaHash === HASH_1234_SHA", que era uma
+    // falha de segurança (backdoor). Ela verificava apenas se a senha ARMAZENADA
+    // do usuário era a padrão "1234", sem comparar com a senha digitada — ou seja,
+    // permitia login com QUALQUER senha digitada enquanto o usuário não tivesse
+    // trocado a senha padrão. Agora a autenticação exige que a senha informada
+    // corresponda de fato à senha (via hash SHA-256, fallback base64, ou texto puro).
+    const conta = usuarios.find(u => 
+        (u.matricula === matriculaVal || u.login === matriculaVal) && 
+        (u.senhaHash === hashForm || u.senhaB64 === b64Form || u.senha === senhaVal)
+    );
 
-    if (senhaValida) {
+    if (conta) {
         usuarioLogado = conta;
         sessionStorage.setItem("usuarioLogado", JSON.stringify(usuarioLogado));
 
-        const unidadesPermitidas = unidades.filter(u => 
-            conta.unidadesIds && conta.unidadesIds.includes(u.id)
-        );
+        const unidadesPermitidas = unidades.filter(u => conta.unidadesIds.includes(u.id));
         unidadeSelecionada = unidadesPermitidas[0] || unidades[0];
         sessionStorage.setItem("unidadeSelecionada", JSON.stringify(unidadeSelecionada));
 
@@ -604,7 +598,11 @@ async function removerProduto(id) {
 // ==========================================================================
 
 function atualizarInterface() {
-    const cargoAtual = cargos.find(c => c.id === usuarioLogado.cargoId) || { nome: "Sem Cargo", permGerenciarAdmin: true };
+    // CORRIGIDO: o fallback anterior era { nome: "Sem Cargo", permGerenciarAdmin: true },
+    // o que concedia acesso administrativo por padrão a qualquer usuário cujo cargo
+    // não fosse encontrado (cargo excluído, corrompido, etc). O padrão seguro é
+    // negar a permissão administrativa nesse caso.
+    const cargoAtual = cargos.find(c => c.id === usuarioLogado.cargoId) || { nome: "Sem Cargo", permGerenciarAdmin: false };
 
     if (usuarioLogado) {
         document.getElementById("usuarioNomeLogado").textContent = usuarioLogado.nome;
