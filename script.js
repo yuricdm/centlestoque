@@ -579,6 +579,132 @@ async function movimentarEstoque(id, tipo) {
     atualizarInterface();
 }
 
+// ==========================================================================
+// 6.1 IMPORTAÇÃO E EXPORTAÇÃO DE PRODUTOS (PLANILHAS)
+// ==========================================================================
+
+const TEMPLATE_HEADERS_PRODUTOS = ["Nome", "Categoria", "Quantidade", "Estoque Mínimo"];
+
+function baixarModeloProdutos() {
+    const dadosExemplo = [
+        TEMPLATE_HEADERS_PRODUTOS,
+        ["Teclado USB", "Periféricos", 10, 3]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(dadosExemplo);
+    ws['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 14 }, { wch: 16 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Modelo");
+    XLSX.writeFile(wb, "modelo_produtos.xlsx");
+    exibirToast("Modelo baixado. Preencha e importe de volta.", "info");
+}
+
+function exportarEstoque() {
+    const produtosUnidade = produtos.filter(p => p.unidadeId === unidadeSelecionada.id);
+
+    const linhas = [TEMPLATE_HEADERS_PRODUTOS];
+    produtosUnidade.forEach(p => {
+        linhas.push([p.nome, p.categoria, p.quantidade, p.minimo]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(linhas);
+    ws['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 14 }, { wch: 16 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Estoque");
+
+    const dataHoje = new Date().toISOString().slice(0, 10);
+    const nomeArquivo = `estoque_${unidadeSelecionada.id}_${dataHoje}.xlsx`;
+    XLSX.writeFile(wb, nomeArquivo);
+    exibirToast("Estoque exportado com sucesso!", "sucesso");
+}
+
+function importarProdutosPlanilha(event) {
+    const arquivo = event.target.files[0];
+    if (!arquivo) return;
+
+    const nomeArquivo = arquivo.name.toLowerCase();
+    const isCsv = nomeArquivo.endsWith(".csv");
+    const leitor = new FileReader();
+
+    leitor.onload = (e) => {
+        try {
+            let workbook;
+            if (isCsv) {
+                workbook = XLSX.read(e.target.result, { type: "string" });
+            } else {
+                const dados = new Uint8Array(e.target.result);
+                workbook = XLSX.read(dados, { type: "array" });
+            }
+
+            const primeiraAba = workbook.SheetNames[0];
+            const planilha = workbook.Sheets[primeiraAba];
+            const linhas = XLSX.utils.sheet_to_json(planilha, { header: 1, defval: "" });
+
+            if (!linhas || linhas.length < 2) {
+                exibirToast("Planilha vazia ou sem linhas de dados.", "alerta");
+                return;
+            }
+
+            let importados = 0;
+            let ignorados = 0;
+
+            for (let i = 1; i < linhas.length; i++) {
+                const [nomeRaw, categoriaRaw, quantidadeRaw, minimoRaw] = linhas[i];
+                const nome = (nomeRaw || "").toString().trim();
+
+                if (!nome) { ignorados++; continue; }
+
+                const categoria = (categoriaRaw || "").toString().trim();
+                const quantidade = parseInt(quantidadeRaw, 10) || 0;
+                const minimo = parseInt(minimoRaw, 10) || 0;
+
+                const novoProduto = {
+                    id: Date.now() + i,
+                    unidadeId: unidadeSelecionada.id,
+                    nome,
+                    categoria,
+                    quantidade,
+                    minimo
+                };
+
+                produtos.push(novoProduto);
+
+                movimentacoes.unshift({
+                    data: new Date().toLocaleString("pt-BR"),
+                    unidadeId: unidadeSelecionada.id,
+                    produto: nome,
+                    tipo: "Importação",
+                    quantidade,
+                    usuario: usuarioLogado.nome
+                });
+
+                importados++;
+            }
+
+            salvarTudo();
+            atualizarInterface();
+
+            if (importados > 0) {
+                const sufixoIgnorados = ignorados ? ` (${ignorados} linha(s) ignorada(s) por falta de nome)` : "";
+                exibirToast(`${importados} produto(s) importado(s) com sucesso!${sufixoIgnorados}`, "sucesso");
+                navegarPara('produtosSection');
+            } else {
+                exibirToast("Nenhum produto válido encontrado na planilha.", "alerta");
+            }
+        } catch (erro) {
+            console.error(erro);
+            exibirToast("Erro ao ler a planilha. Verifique se o arquivo segue o modelo.", "erro");
+        } finally {
+            event.target.value = "";
+        }
+    };
+
+    if (isCsv) {
+        leitor.readAsText(arquivo, "UTF-8");
+    } else {
+        leitor.readAsArrayBuffer(arquivo);
+    }
+}
+
 async function removerProduto(id) {
     const confirmado = await exibirModal({
         titulo: "Excluir Produto",
