@@ -283,6 +283,32 @@ body {
     font-size: 1.15rem;
 }
 
+.section-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-bottom: 2px solid #EBEBEB;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+.section-header-flex h3 {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.import-actions {
+    flex-wrap: wrap;
+}
+
+.btn-file-label {
+    display: inline-block;
+    text-align: center;
+}
+
 /* BOTÕES ESTILO ML */
 button {
     cursor: pointer;
